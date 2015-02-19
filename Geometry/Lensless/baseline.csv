@@ -1,0 +1,12 @@
+ FRESNEL AVE, BARE COATING
+ EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), BASE_RAYS, RAYS PER AREA, THETA_CALC, THETA_SIM
+ .59       , 10000        , -1          , 25           , 2         , 100       , 50        , 485            , .06175217007, 26.565051177 , 0           
+ FRESNEL AVE, BARE COATING
+ EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), BASE_RAYS, RAYS PER AREA, THETA_CALC, THETA_SIM
+ .59       , 10000        , -1          , 25           , 2         , 100       , 100       , 1316           , .04188961640, 45           , 0           
+ FRESNEL AVE, BARE COATING
+ EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), BASE_RAYS, RAYS PER AREA, THETA_CALC, THETA_SIM
+ .59       , 10000        , -1          , 25           , 2         , 50        , 100       , 1487           , .04733272005, 63.4349488229, 0           
+ FRESNEL AVE, BARE COATING
+ EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), BASE_RAYS, RAYS PER AREA, THETA_CALC, THETA_SIM
+ .59       , 10000        , -1          , 25           , 2         , 50        , 100       , 1487           , .04733272005, 63.4349488229, 59.672401789

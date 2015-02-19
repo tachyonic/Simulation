@@ -4,16 +4,16 @@
   $SCR 1
 FRESNEL AVE, BARE COATING
   $SCR 1
-EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), BASE_RAYS, RAYS PER AREA
+EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), BASE_RAYS, RAYS PER AREA, THETA_CALC, THETA_SIM
 
   $IO OUTPUT CLOSE
   $ECHO
 
-LOOP_1 {  !! nested macros
+!!LOOP_1 {  !! nested macros
                         
-$ITER WD_PDMS 1 301 -31 NUMBEROFRAYS 
-  {  
-  &REG WD_PDMS
+!!$ITER WD_PDMS 1 301 -31 NUMBEROFRAYS 
+!!  {  
+!!  &REG WD_PDMS
   CONSIDER ALL
   SYSTEM NEW
   RESET   
@@ -53,10 +53,10 @@ $ITER WD_PDMS 1 301 -31 NUMBEROFRAYS
   CHIP_LENGTH=2000            !! Length and width of microchip
   PDMS_THICK_BOTTOM=300       !! Total thickness of PDMS adjacent/below the channels  
   GLASS_THICK=200             !! Total thickness of glass layer
-  !!CHAN_WIDTH=25
-  !!WD_PDMS=100
+  CHAN_WIDTH=25
+  WD_PDMS=50
   AIR_GAP=2                   !! air gap beneath detector
-  !DET_RAD=50
+  DET_RAD=100
    
   !! Bounding Surface 
   SURFACE 
@@ -130,45 +130,46 @@ $ITER WD_PDMS 1 301 -31 NUMBEROFRAYS
     PLOT FACETS 
     !!$VIEW 
     CONSIDER ONLY DETECTOR 
-    STATS ALL        
-    
+    STATS ALL      
     $GRAB 'TOTAL' 0 1 NUMBEROFRAYS
 
-	EXTREME DIRECTION
-	$GRAB 'TOTAL' 0 1 NUMBEROFRAYS
+	  EXTREMES DIRECTION
+	  $GRAB 'Ray with MINIMUM A component' 1 1 MNAX MNAY MNAZ
 	
   !!!!!!!!!!!!!!!!!!!
 
   RAYS_AREA=(NUMBEROFRAYS)/(3.14159*(DET_RAD)^2)
+  THETA_CALC=ATAN[(DET_RAD)/(WD_PDMS)]
+  THETA_SIM=ACOS[(MNAZ)/(SQRT((MNAX)^2+(MNAY)^2+(MNAZ)^2))]
   
   !!WRITES TO TEXT FILE ON EACH PASS
   $ECHO NONE
   $IO OUTPUT GEOMETRY\LENSLESS\BASELINE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
   $END
   $SCR 1
-\EM_WAVE.\, \FLUX_TOTAL.\, \COAT_REFL.\, \CHAN_WIDTH.\, \AIR_GAP.\, \WD_PDMS.\, \DET_RAD.\, \NUMBEROFRAYS.\, \RAYS_AREA.\
+\EM_WAVE.\, \FLUX_TOTAL.\, \COAT_REFL.\, \CHAN_WIDTH.\, \AIR_GAP.\, \WD_PDMS.\, \DET_RAD.\, \NUMBEROFRAYS.\, \RAYS_AREA.\, \THETA_CALC.\, \THETA_SIM.\
 
   $IO OUTPUT CLOSE
   $ECHO
   
-  }                         !!end of iteration loop
+!!  }                         !!end of iteration loop
 
-}
+!!}
 
-LOOP_2	{
-  $ITER DET_RAD 20 200 -19  
-  {
-    &REG DET_RAD
-    $LOOP_1 ?
-  }
-}
+!!LOOP_2	{
+!!  $ITER DET_RAD 20 200 -19  
+!!  {
+!!    &REG DET_RAD
+!!    $LOOP_1 ?
+!!  }
+!!}
 
 !!LOOP_3	{
-  $ITER CHAN_WIDTH 25 75 -5  
-  {
-    &REG CHAN_WIDTH 
-    $LOOP_2 ?
-  }
+!!  $ITER CHAN_WIDTH 25 75 -5  
+!!  {
+!!    &REG CHAN_WIDTH 
+!!    $LOOP_2 ?
+!!  }
 !!}
 
 !!  $ITER COAT_REFL 0 1 -4  
