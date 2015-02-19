@@ -1,0 +1,267 @@
+  $ECHO NONE
+  $IO OUTPUT GEOMETRY\BALL\ARRAY\BASIC_NANO.CSV +FILE(10)
+  $END
+  $SCR 1
+Small lens array
+  $SCR 1
+EM_WAVE, N_LENS, LENS_DIA (um), BFL, LENS_X, LENS_Y, LENS_PCH, LENS_XPCH (um), LENS_YPCH (um), PDMS_CHAN_LENS (um), PDMS_LENS_DET (um), AIR GAP (um), DET_RAD (um), BASENRAYS, NRAYS\
+  $IO OUTPUT CLOSE
+  $ECHO
+
+BALL_ARRAY {  !! nested macros
+  ENT OBJ
+  $DO 1 (LENS_Y)
+    $ROW ?
+}
+
+ROW {  !! create a row of LENSLETs
+  $DO 1 (LENS_X)
+    $BALL_LENS ? #1
+}
+
+BALL_LENS {  !! create a single circular LENSLET at (x,y)     
+    OPTICAL Z (PDMS_CHAN_LENS)+(LENS_DIA)/2 -(LENS_DIA)/2 ELLIPSE (LENS_DIA)/2 'BALL.TOP'  
+    INTERFACE COATING TRANSMIT BALL PDMS 
+    SHIFT Y ((LENS_YPCH)*#2)-((LENS_YPCH)*((LENS_Y)+1))/2
+    SHIFT X ((LENS_XPCH)*#1)-((LENS_XPCH)*((LENS_X)+1))/2
+             
+    OPTICAL Z (PDMS_CHAN_LENS)-(LENS_DIA)/2 (LENS_DIA)/2 ELLIPSE (LENS_DIA)/2 'BALL.BOTTOM'  
+    INTERFACE COATING TRANSMIT BALL PDMS
+    SHIFT Y ((LENS_YPCH)*#2)-((LENS_YPCH)*((LENS_Y)+1))/2  
+    SHIFT X ((LENS_XPCH)*#1)-((LENS_XPCH)*((LENS_X)+1))/2
+}
+
+PARAM_1 {
+  $ITER PDMS_LENS_DET 10 100 -10 NUMBEROFRAYS 
+    {  
+    &REG PDMS_LENS_DET
+    CONSIDER ALL
+    SYSTEM NEW
+    RESET   
+  
+    !! Optical variables
+    FLUX_TOTAL=10000
+    EM_WAVE=0.590       !! emission wavelength
+    SPOT_SIZE=10
+          
+    !! Define units and wavelength
+    UNITS MICRONS 'Watts" 
+    WAVELENGTHS (EM_WAVE)*1000 NANOMETERS 
+  
+    !! Define media
+    N_LENS=1.768
+    MEDIA ; 1.43     'PDMS' 
+    MEDIA ; 1.51     'GLASS'
+    MEDIA ; 1.33     'WATER'
+    MEDIA ; (N_LENS) 'BALL'
+                        
+    !! Including 
+    SPLIT 1500 MONTECARLO       !! monte carlo simulation
+    LEVEL 1000 OFF 
+    FRESNEL AVE                 !! fresnel equation
+  
+    !! Coating properties
+    COATING PROPERTIES 0; 0 1 'TRANSMIT' 
+    COATING PROPERTIES 0; 0 0 'ABSORB' 
+    COATING PROPERTIES 0; 1 0 'REFLECT' 
+      
+    !! Simulation Variables
+    CHIP_LENGTH=2000            !! Length and width of microchip
+    CHAN_WIDTH=25
+    PDMS_THICK_BOTTOM=300       !! Total thickness of PDMS adjacent/below the channels  
+    GLASS_THICK=200             !! Total thickness of glass layer
+    
+    !!LENS_DIA=25                 !! Diamter of the lens
+    LENS_RAD=(LENS_DIA)/2  
+    N_EFF=(N_LENS)/1.43
+    TERM_A=(N_EFF)-1
+    TERM_B=2/(LENS_RAD)
+    TERM_C=((TERM_A)*(LENS_DIA))/((N_EFF)*(LENS_RAD)*(LENS_RAD))
+    LENS_P=(TERM_A)*((TERM_B)-(TERM_C))
+    EFL=1/(LENS_P)
+    BFL=(EFL)-(LENS_RAD)
+
+    PDMS_CHAN_LENS=(BFL)  !! Thickness of PDMS layer above the channel
+    $IF (BFL) LT 13 THEN
+      PDMS_CHAN_LENS=1    !! array should not be in channel
+    $ENDIF 
+        
+    !!LENS_PCH=2.5
+    LENS_XPCH=(LENS_PCH)*(LENS_RAD)
+    LENS_YPCH=(LENS_PCH)*(LENS_RAD)
+    LENS_X=20
+    LENS_Y=20
+
+    AIR_GAP=2                   !! air gap beneath detector    
+    DET_RAD=60
+    !!DET_RAD=((LENS_YPCH)*(LENS_Y))/2!!25
+        
+    !!OPTION 1: VARIABLE
+    !!PDMS_LENS_DET=(LENS_RAD)
+    
+    !!OPTION 2: FIXED
+    !!PDMS_LENS_DET=0
+    !!$IF (LENS_F) LT 300 THEN
+    !!  PDMS_LENS_DET=300-(LENS_RAD)-(LENS_F)     !! Thickness of PDMS layer above the channels
+    !!$ENDIF   
+     
+    !! Bounding Surface 
+    SURFACE 
+    PLANE Z (PDMS_CHAN_LENS)+(LENS_DIA)+(PDMS_LENS_DET)+(AIR_GAP) 0 0 ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'BoundingPlane' 
+    !!PLOT SURFACE 
+  
+    !! Beginning of geometry modeling 
+    ENT OBJ 
+    
+    !! Channel 
+    PLANE Z 0 RECTANGLE (CHIP_LENGTH)/2.2 (CHAN_WIDTH)/2 'CHANNEL.TOP' 
+    INTERFACE COATING BARE WATER PDMS 
+    
+    PLANE Z -(CHAN_WIDTH) RECTANGLE (CHIP_LENGTH)/2.2 (CHAN_WIDTH)/2 'CHANNEL.B0TTOM' 
+    INTERFACE COATING BARE WATER PDMS 
+    
+    PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.BACK' 
+    INTERFACE COATING BARE WATER PDMS 
+    SHIFT Z -(CHAN_WIDTH)/2 
+    SHIFT Y (CHAN_WIDTH)/2 
+    
+    PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.FRONT' 
+    INTERFACE COATING BARE WATER PDMS 
+    SHIFT Z -(CHAN_WIDTH)/2 
+    SHIFT Y -(CHAN_WIDTH)/2 
+    
+    PLANE X 0 RECTANGLE (CHAN_WIDTH)/2 (CHAN_WIDTH)/2 'CHANNEL.RIGHT' 
+    INTERFACE COATING BARE WATER PDMS 
+    SHIFT X (CHIP_LENGTH)/2.2 
+    SHIFT Z -(CHAN_WIDTH)/2 
+    
+    PLANE X 0 RECTANGLE (CHAN_WIDTH)/2 (CHAN_WIDTH)/2 'CHANNEL.LEFT' 
+    INTERFACE COATING BARE WATER PDMS 
+    SHIFT X -(CHIP_LENGTH)/2.2 
+   
+    !! Glass-layer (substrate)
+    TUBE Z -(PDMS_THICK_BOTTOM)  (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 -(PDMS_THICK_BOTTOM)-(GLASS_THICK) (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 0 0 'GLASS.SIDE' 
+    INTERFACE COATING BARE GLASS AIR 
+            
+    PLANE Z -(PDMS_THICK_BOTTOM)-(GLASS_THICK) ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'GLASS.BOTTOM' 
+    INTERFACE COATING BARE GLASS AIR  
+    
+    !! PDMS-layer
+    TUBE Z (PDMS_CHAN_LENS)+(LENS_DIA)+(PDMS_LENS_DET) (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 -(PDMS_THICK_BOTTOM) (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 0 0 'MANTEL.SIDE' 
+    INTERFACE COATING BARE PDMS AIR 
+    
+    PLANE Z -(PDMS_THICK_BOTTOM) ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'MANTEL.BOTTOM' 
+    INTERFACE COATING BARE PDMS GLASS 
+    
+    !! Air Gap
+    PLANE Z (PDMS_CHAN_LENS)+(LENS_DIA)+(PDMS_LENS_DET) ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'AIR_GAP' 
+    INTERFACE COATING BARE PDMS AIR 
+    
+    !! Detector 
+    PLANE Z (PDMS_CHAN_LENS)+(LENS_DIA)+(PDMS_LENS_DET)+(AIR_GAP) ELLIPSE (DET_RAD) (DET_RAD) 'DETECTOR' 
+    INTERFACE COATING ABSORB DOPED AIR     
+    
+    !!!!!!!!!!!!!!!!!!!
+    RAYS 0 
+    IMMERSE WATER             !! light source is inside the water 
+          
+    EMITTING SPHEROID 0 0 -(CHAN_WIDTH)/2 (SPOT_SIZE) (SPOT_SIZE) (SPOT_SIZE) (FLUX_TOTAL) 'FLUOROPHORE' ISO 
+    FLUX TOTAL (FLUX_TOTAL) 
+    WAVELENGTHS (EM_WAVE)*1000 NANOMETERS 
+    HALT 10000 
+    
+      CONSIDER ALL 
+      WINDOW Z X 
+      TRACE PLOT OVERLAY
+      PLOT FACETS
+      CONSIDER ONLY DETECTOR 
+      STATS ALL        
+      
+      $GRAB 'TOTAL' 0 1 BASENUMBEROFRAYS
+    
+    !!!!!!!!!!!!!!!!!!! 
+  
+    $BALL_ARRAY ?
+    
+    !! Laser-induced fluorescence imitating light source with 100000 rays 
+    RAYS 0 
+    IMMERSE WATER             !! light source is inside the water 
+      
+    EMITTING SPHEROID 0 0 -(CHAN_WIDTH)/2 (SPOT_SIZE) (SPOT_SIZE) (SPOT_SIZE) (FLUX_TOTAL) 'FLUOROPHORE' ISO 
+    FLUX TOTAL (FLUX_TOTAL) 
+    WAVELENGTHS (EM_WAVE)*1000 NANOMETERS 
+    HALT 10000 
+    
+      CONSIDER ALL 
+      WINDOW Z X 
+      TRACE PLOT OVERLAY
+      PLOT FACETS 
+      !!$VIEW 
+      CONSIDER ONLY DETECTOR 
+      STATS ALL        
+      
+      $GRAB 'TOTAL' 0 1 NUMBEROFRAYS  
+      &REG 
+    
+    !!WRITES TO TEXT FILE ON EACH PASS
+    $ECHO NONE
+    $IO OUTPUT GEOMETRY\BALL\ARRAY\BASIC_NANO.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $END
+    $SCR 1
+\EM_WAVE.\, \N_LENS.\, \LENS_DIA.\, \BFL.\,  \LENS_X.\, \LENS_Y.\,\LENS_PCH.\, \LENS_XPCH.\, \LENS_YPCH.\, \PDMS_CHAN_LENS.\ ,\PDMS_LENS_DET.\ ,  \AIR_GAP.\, \DET_RAD.\ , \BASENUMBEROFRAYS.\ , \NUMBEROFRAYS.\
+    $IO OUTPUT CLOSE
+    $ECHO
+    
+    }                         !!end of iteration loop  
+
+    !!WRITES TO TEXT FILE ON EACH PASS
+    $ECHO NONE
+    $IO OUTPUT GEOMETRY\BALL\ARRAY\BASIC_NANO.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $END
+    $SCR 1
+    \      
+    $IO OUTPUT CLOSE
+    $ECHO
+}
+
+!!PARAM_2 {
+!!  $ITER DET_RAD 20 200 -20  
+!!  {
+!!    &REG DET_RAD
+!!    $PARAM_1 ?
+!!  }
+!!}
+
+PARAM_3 {
+  $ITER LENS_PCH 2 4 -5  
+  {
+    &REG LENS_PCH
+    $PARAM_1 ?
+  }
+}
+
+PARAM_4 {
+  $ITER LENS_DIA 0.2 2 -10  
+  {
+    &REG LENS_DIA 
+    $PARAM_3 ?
+  }
+}
+
+!!PARAM_5 {
+  $ITER LENS_PCH 2 4 -5  
+  {
+    &REG LENS_PCH
+    $PARAM_4 ?
+  }
+!!}            
+
+!!  $ITER N_LENS 1.76 2.1 -2  
+!!  {
+!!    &REG N_LENS
+!!    $PARAM_5 ?
+!!  }
+
+                            
+RETURN
+
