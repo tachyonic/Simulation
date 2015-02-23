@@ -1,3 +1,51 @@
+ANALYSIS {    
+
+$ECHO NONE
+$IO OUTPUT  GEOMETRY\LENSLESS\BASELINE_ANALYSIS.CSV +FILE(10)
+$END
+$SCR 1
+150um cubic zirconia - testing analyses
+$SCR 1
+EMISSION (um), N_LENS, LENS_DIA (um), EFF (um), BFL (um), PDMS_CHAN_LENS (um), PDMS_LENS_DET (um), COAT_REFL , AIR_GAP (um), WD_PDMS, DET_RAD (um)
+$SCR 1
+\EM_WAVE.\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \BFL.\ ,\PDMS_CHAN_LENS.\ , \PDMS_LENS_DET.\ , \COAT_REFL.\, \AIR_GAP.\, \WD_PDMS.\, \DET_RAD.\
+$SCR 1
+  FLUX VS AOI ON DETECTOR
+  $SCR 1
+  AOI, FLUX
+$IO OUTPUT CLOSE
+$ECHO
+    
+    !! ANGLE OF INCIDENCE ON DETECTOR
+    HISTORY PX
+    INTERSECTS DETECTOR INT_DET
+    
+    $ITER AOI 0 85 -18 TFLUX
+    {
+     ANGLE DETECTOR GT (AOI) SETHIGH  !! Store all paths GT angle in SETHIGH
+     ANGLE DETECTOR LT (AOI+5) SETLOW  !! Store all paths LT angle+1 in SETLOW
+     AND SETHIGH SETLOW SETALL !! Store all paths in SETALL that exist in both SETHIGH & SETLOW
+     SUMMARY SETALL  !! Get flux information for all paths in SETALL
+    
+     $GRAB 'Total Flux' 0 1 TFLUX  !! Assign to TFLUX to be stored in iter.dis
+     &REG TFLUX AOI
+     
+      $ECHO NONE
+      $IO OUTPUT GEOMETRY\LENSLESS\BASELINE_ANALYSIS.CSV +FILE(10)
+      $END
+      $SCR 1
+      \AOI.\, \TFLUX.\
+      $IO OUTPUT CLOSE
+      $ECHO
+    }
+        	  
+    RETURN !! Ends PX mode
+    DISPLAY ITER.DIS  !! TFLUX vs. TESTANGLE
+    GRAPH 'Flux per Detector Position'
+    RETURN
+
+}
+
   $ECHO NONE
   $IO OUTPUT GEOMETRY\LENSLESS\BASELINE.CSV +FILE(10)
   $END
@@ -54,7 +102,7 @@ $ITER DET_RAD 10 500 -26 NUMBEROFRAYS
   PDMS_THICK_BOTTOM=300       !! Total thickness of PDMS adjacent/below the channels  
   GLASS_THICK=200             !! Total thickness of glass layer
   CHAN_WIDTH=25
-  !!WD_PDMS=170+121.15+150
+  !!WD_PDMS=100
   AIR_GAP=2                   !! air gap beneath detector
   !!DET_RAD=100
    
@@ -126,21 +174,17 @@ $ITER DET_RAD 10 500 -26 NUMBEROFRAYS
   
     CONSIDER ALL 
     WINDOW Z X 
+    SAVE 10
     TRACE PLOT OVERLAY
     PLOT FACETS 
-    !!$VIEW 
+    $VIEW 
     CONSIDER ONLY DETECTOR 
     STATS ALL      
     $GRAB 'TOTAL' 0 1 NUMBEROFRAYS
-
-	  !!EXTREMES DIRECTION
-	  !!$GRAB 'Ray with MINIMUM A component' 1 1 MNAX MNAY MNAZ
 	
   !!!!!!!!!!!!!!!!!!!
-
-  !!RAYS_AREA=(NUMBEROFRAYS)/(3.14159*(DET_RAD)^2)  
+                                                    
   THETA_CALC=ATAN[(DET_RAD)/((WD_PDMS)+(AIR_GAP))]
-  !!THETA_SIM=ACOS[(MNAZ)/(SQRT((MNAX)^2+(MNAY)^2+(MNAZ)^2))]
   THETA_RAYS=ACOS[1-(2*(NUMBEROFRAYS)/(FLUX_TOTAL))]
   
   !!WRITES TO TEXT FILE ON EACH PASS

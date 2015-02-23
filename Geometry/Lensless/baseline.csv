@@ -629,3 +629,11 @@
  .59       , 10000        , -1          , 25           , 2         , 1000      , 480.4     , 619            , 25.6149747983, 28.8126850839
  .59       , 10000        , -1          , 25           , 2         , 1000      , 500       , 653            , 26.5192877846, 29.6110096767
  .59       , 10000        , -1          , 25           , 2         , 1000      , 10        , 1              , .571795183473, 1.14593468971
+ FRESNEL AVE, BARE COATING, EXTENDED SIMULATION FOR BASELINE FILE
+ EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), BASE_RAYS, THETA_CALC, THETA_RAYS
+ FRESNEL AVE, BARE COATING, EXTENDED SIMULATION FOR BASELINE FILE
+ EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), BASE_RAYS, THETA_CALC, THETA_RAYS
+ .59       , 10000        , -1          , 25           , 2         , 100       , 50        , 485            , 26.1139126302, 25.4447505454
+ FRESNEL AVE, BARE COATING, EXTENDED SIMULATION FOR BASELINE FILE
+ EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), BASE_RAYS, THETA_CALC, THETA_RAYS
+ .59       , 10000        , -1          , 25           , 2         , 100       , 100       , 1316           , 44.4327335901, 42.5404666182
