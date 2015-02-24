@@ -1,13 +1,13 @@
-  $ECHO NONE
-  $IO OUTPUT GEOMETRY\LENSLESS\BASELINE_EXCITATION.CSV +FILE(10)
-  $END
-  $SCR 1
+!!  $ECHO NONE
+!!  $IO OUTPUT GEOMETRY\LENSLESS\BASELINE_EXCITATION.CSV +FILE(10)
+!!  $END
+!!  $SCR 1
 
-  $SCR 1
-EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), EMISSION_RAYS, THETA_CALC, THETA_RAYS, EXCITATION_RAYS
+!!  $SCR 1
+!!EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE (um), DET_RAD (um), EMISSION_RAYS, THETA_CALC, THETA_RAYS, EXCITATION_RAYS
 
-  $IO OUTPUT CLOSE
-  $ECHO
+!!  $IO OUTPUT CLOSE
+!!  $ECHO
 
 !!LOOP_1 {  !! nested macros
                         
@@ -21,6 +21,29 @@ EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE
   CONSIDER ALL
   SYSTEM NEW
   RESET   
+  
+  $UNVAR ERROR       !! stop if undefined variables are encountered
+
+  UNITS UM    !! Set system units to microns
+  
+  PI=ACOS(-1)
+  
+  RES=600              !! Pixel resolution for BPM calculation
+  WAVEL=1.3            !! Wavelength (in microns)
+  NCORE=1.456427       !! Core index of refraction
+  NCLAD=1.449679       !! Cladding index of refraction
+  RCORE=5.9/2          !! Core radius
+  RCLAD=125/2          !! Cladding radius
+  ROUT=250/2           !! Outer (absorbing) layer radius
+  OUTAB=0.1            !! Absorption constant for outer layer
+  PLOT_LIM=4*RCORE     !! Max radius to plot results for
+  INP_WID=0.8*RCORE    !! Width of input beam
+  PROP_DIST=10000      !! Distance to propagate along the fiber
+  NPLANES=100          !! Number of planes at which to store the field 
+  WINDO=ROUT           !! Window limits for BPM calculation
+  EPS=0.01             !! = epsilon (a small distance)
+  
+    
   
   !! Optical variables
   FRESNEL AVE
@@ -161,58 +184,96 @@ EMISSION (um), FLUX_TOTAL, COAT_REFL, CHAN_WIDTH, AIR_GAP (um), WORKING_DISTANCE
   !!EMITTING SPHEROID 0 0 -(CHAN_WIDTH)/2 (SPOT_SIZE) (SPOT_SIZE) (SPOT_SIZE) (FLUX_TOTAL) 'FLUOROPHORE' ISO 
   !!FLUX TOTAL (FLUX_TOTAL) 
   !!WAVELENGTHS (EM_WAVE)*1000 NANOMETERS 
-  !!HALT 10000 
-  
+  !!HALT 10000   
   !!  CONSIDER ALL 
   !!  WINDOW Z X 
   !!  TRACE PLOT OVERLAY
   !!  PLOT FACETS 
-    !!$VIEW 
- !!   CONSIDER ONLY DETECTOR 
- !!   STATS ALL      
-!!    $GRAB 'TOTAL' 0 1 EMISSIONRAYS
+  !!  $VIEW 
+  !!  CONSIDER ONLY DETECTOR 
+  !!  STATS ALL      
+  !!  $GRAB 'TOTAL' 0 1 EMISSIONRAYS
 
 	
 	!! Laser light source
-	
-  !! Calculate the numerical aperture and V number
-  
 
-  BEAMS COHERENT DIFFRACT
-  PARABASAL 4
-  WAVELENGTH 1.55 MICRONS
-  WIDTHS 1.6
-  
-  GAUSSIAN X ((CHIP_LENGTH)/2)+(MMF_LENGTH) 0 100 (CORE)/2 
-  SOURCE DIRECTION X
-  
+!! Calculate (and display) the numerical aperture and V number 
+!! of the fiber...
 
-  CONSIDER ALL 
-  WINDOW Z X 
-  TRACE PLOT OVERLAY
-  PLOT FACETS 
-  $VIEW 
-  CONSIDER ONLY DETECTOR 
-  PIXELS 100
-  SPREAD NORMAL
-  
-  STATS ALL      
-  $GRAB 'TOTAL' 0 1 EMISSIONRAYS
+NA=SQRT(NCORE*NCORE-NCLAD*NCLAD)
+VN=2*PI*RCORE*NA/WAVEL
+	  
+!! Set window and resolution.  A thin slice along X is chosen 
+!! because we're doing a radially-symmetric calculation.
+
+PIXELS (RES)
+WINDOW Y -.5*WINDO/RES (WINDO) X -2@(EPS) !! has bin at the origin
+
+
+BEAMS COHERENT DIFFRACT
+IMMERSE SILICA      !! Any beams we create will already be in the fiber
+
+
+!! Create input field...
+
+RAYS 0
+RAYSET X ((CHIP_LENGTH)/2); 0 0 1 2@(INP_WID) -SOMB 0
+ SOURCE DIRECTION X
+FIELD ENERGY 0
+$COPY 29 FIBER_INPUT_29.DIS
+$COPY 9  FIBER_INPUT.DIS
+
+
+!! Create the expected fiber mode...
+
+RAYS 0
+RAYSET X ((CHIP_LENGTH)/2); 0 0 1 2@(RCORE) -FIBR (VN)
+ SOURCE DIRECTION X
+FIELD ENERGY 0
+
+
+!! Couple the input field with the expected mode.  We'll now have 
+!! a properly scaled fiber mode to compare with.
+
+FIELD FIBER_INPUT_29.DIS ENERGY COUPLE
+$COPY 29 FIBER_MODE_29.DIS
+$COPY 9 FIBER_MODE.DIS
+DISPLAY 
+  REDUCE 1 INT(RES*PLOT_LIM/WINDO) 1 1 1 1  !! reduce range of data for plotting
+  FORM -4    !! take log of data keeping 4 orders of magnitude
+  GRAPH      !! plot expected mode
+RETURN
+
+
+!! Propagate the input field along the fiber using BPM...
+
+AXIS X        !! We're doing a radially-symmetric propagation along Z
+ACCURACY LOW  !! Lowest-order BPM propagation
+FIELD FIBER_INPUT_29.DIS ENERGY 0 (PROP_DIST) (NPLANES) BC 1 !! reflective BCs
+$COPY 29 FIBER_PROP_29.DIS
+$COPY 9 FIBER_PROP_9.DIS
+DISPLAY 
+  REDUCE 1 INT(RES*PLOT_LIM/WINDO) 1 1 (NPLANES+1) 1   !! reduce range of data for plotting
+  FORM -4    !! Take log of data keeping 4 orders of magnitude
+  PICTURE    !! Display raster picture of propagation results
+  GRAPH 1 INT(NPLANES/10) INT(2*NPLANES/10) (NPLANES+1) APPEND
+RETURN
+
 	
   !!!!!!!!!!!!!!!!!!!
                                                     
-  THETA_CALC=ATAN[(DET_RAD)/((WD_PDMS)+(AIR_GAP))]
-  THETA_RAYS=ACOS[1-(2*(EMISSIONRAYS)/(FLUX_TOTAL))]
+!!  THETA_CALC=ATAN[(DET_RAD)/((WD_PDMS)+(AIR_GAP))]
+!!  THETA_RAYS=ACOS[1-(2*(EMISSIONRAYS)/(FLUX_TOTAL))]
   
   !!WRITES TO TEXT FILE ON EACH PASS
-  $ECHO NONE
-  $IO OUTPUT GEOMETRY\LENSLESS\BASELINE_EXCITATION.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
-  $END
-  $SCR 1
-\EM_WAVE.\, \FLUX_TOTAL.\, \COAT_REFL.\, \CHAN_WIDTH.\, \AIR_GAP.\, \WD_PDMS.\, \DET_RAD.\, \EMISSIONRAYS.\, \THETA_CALC.\, \THETA_RAYS.\, \EXCITATIONRAYS.\
+!!  $ECHO NONE
+!!  $IO OUTPUT GEOMETRY\LENSLESS\BASELINE_EXCITATION.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+!!  $END
+!!  $SCR 1
+!!\EM_WAVE.\, \FLUX_TOTAL.\, \COAT_REFL.\, \CHAN_WIDTH.\, \AIR_GAP.\, \WD_PDMS.\, \DET_RAD.\, \EMISSIONRAYS.\, \THETA_CALC.\, \THETA_RAYS.\, \EXCITATIONRAYS.\
 
-  $IO OUTPUT CLOSE
-  $ECHO
+!!  $IO OUTPUT CLOSE
+!!  $ECHO
   
 !!  }                         !!end of iteration loop
 
