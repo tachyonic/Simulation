@@ -1,0 +1,10 @@
+!! Optical
+N_LENS=1.768
+N_EFF=(N_LENS)/(N_PDMS)  
+LENS_R=0.15
+LENS_T=0.85
+LENS_A=0		
+
+!! Geometric
+LENS_DIA=250
+LENS_ERROR=1.27
