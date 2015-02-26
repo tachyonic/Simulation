@@ -49,12 +49,13 @@ $ECHO NONE
 $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\SIMPLE.CSV +FILE(10)
 $END
 $SCR 1
-150um sapphire - testing ball model
+150um sapphire - testing ball model, CY5 fluorophore
 $SCR 1
-EMISSION (um), EXCITATION (um), QE, N_LENS, LENS_DIA (um), EFF (um), BFL (um), PDMS_CHAN_LENS (um), PDMS_LENS_DET (um), WD_PDMS, AIR_GAP (um), EX_ANGLE, EX_XSHIFT, DET_RAD (um),  BASE_EX_POT , LENS_EX_SPOT, BASE_RAYS, N_RAYS, BASE_THETA, N_THETA, BASE_EX_DET, N_EX_DET, BASE_SNR, N_SNR
-
+EX_POWER (W), EXCITATION (um), EMISSION (um), N_MOLECULES_VOL, SPOT_DIA, QY, N_LENS, LENS_DIA (um), EFF (um), PDMS_CHAN_LENS (um), PDMS_LENS_DET (um), WD_PDMS, AIR_GAP (um), EX_ANGLE, EX_XSHIFT, DET_RAD (um), EX_DET_RAYS, EX_DET_FLUX, EX_SPOT_RAYS, EX_SPOT_FLUX, SPOT_DET_RAYS, SPOT_DET_FLUX, THETA, SNR
 $IO OUTPUT CLOSE
 $ECHO
+
+
 
 !!$ITER DET_RAD 100 200 -2 NUMBEROFRAYS
 !!{
@@ -64,16 +65,39 @@ $ECHO
   SYSTEM NEW
   RESET   
   
-  !! Optical variables
+  $ECHO NONE 
+
+  !! Fundamental constants
+  PLANCK=6.6267e-34
+  C_LIGHT=3e+8
+  PI=ACOS(-1)
+  
+  !! OPTICAL
   FRESNEL AVE
-  EM_WAVE=0.670       !! emission wavelength
-  EX_WAVE=0.625       !! emission wavelength
-  QE=1
-  SPOT_SIZE=10
+  EM_WAVE=0.670               !! emission wavelength
+  EX_WAVE=0.650               !! emission wavelength
+  EX_POW=400e-6               !! excitation power
+  
+  QY=0.3                              !! quantum yeild
+  ME=250000                           !! molar extinction
+  AB_CS=(ME)*3.82E-21*100000000       !! absorption cross section (um^2/molecule)  
+
+  SPOT_DIA=10
+  N_MOLECULES_VOL=0.2                       !! number of molecules in 1 um^3
+  SPOT_VOL=(4/3)*(PI)*((SPOT_DIA)/2)^3
+  N_MOLECULES=(SPOT_VOL)*(N_MOLECULES_VOL)  !!number of molecules in optical path
+   
+  PH_ENERGY=(PLANCK)*(C_LIGHT)/((EX_WAVE)*(10^-6))  
+  EX_FLUX=(EX_POW)/(PH_ENERGY)                  !! Let flux represent #source photons/second 
+  FLUX_RAY=(EX_FLUX)/((PI)*((SPOT_DIA)/2)^2)    !! per um area      
+  
+  
+  EX_RAYS=300                   !! (EX_RAYS)^2 * NPHOTONS=EX_FLUX   
+  EM_RAYS=10000                 !! EM_RAYS * NPHOTONS=EM_FLUX 
       
   !! Define units and wavelength
   UNITS MICRONS 'Watts" 
-  WAVELENGTHS (EM_WAVE)*1000 NANOMETERS 
+  WAVELENGTHS (EM_WAVE) UM 
 
   !! Define media
   N_LENS=1.768
@@ -97,8 +121,7 @@ $ECHO
   COATING PROPERTIES 0; 0 1 'TRANSMIT' 
   COATING PROPERTIES 0; 0 0 'ABSORB' 
   COATING PROPERTIES 0; 1 0 'REFLECT' 
-
-$ECHO NONE    
+              
   !! Simulation Variables
   
   !! Chip variables
@@ -194,8 +217,6 @@ $ECHO NONE
   ANGLE=ATAN[(F2POSX)/(F2POSZ)]  !!43
   
   FIBER=5000                  !! length of remaining fiber
-  !!CF=0.8862269  !! Conversion factor 1/e^2 to ASAP's Gaussian definition    
-  CF=1.5
   
 !! Multimode fiber 
   ENT OBJ 
@@ -242,73 +263,8 @@ TUBE Z (F2POSZ)+(F2LENGTH) (CLADDING)/2 (CLADDING)/2 (F2POSZ)+(F2LENGTH)+(FIBER)
     INTERFACE COATING ABSORB AIR DOPED 
 
 !! Excitation Spot
-ELLIPSOID (SPOT_SIZE)+(CHAN_WIDTH) (SPOT_SIZE)+(CHAN_WIDTH) (SPOT_SIZE)*1.25 0 0 0 'EXCITE_SPOT'
+ELLIPSOID (SPOT_DIA)/2 (SPOT_DIA)/2 (SPOT_DIA)/2 0 0 0 'EXCITE_SPOT'
 INTERFACE COATING TRANSMIT WATER WATER
-
-$ECHO
-$GO skip
-  !!!!!!!!!!!!!!!!!!!
-
-    RAYS 0
-    IMMERSE SILICA
-    PARABASALS 4
-    BEAMS COHERENT DIFFRACT
-    WAVELENGTHS (EX_WAVE) UM
-    WIDTHS 1.6
-    GAUSSIAN Z -(F2POSZ)-(FIBER)-(F2LENGTH) (CHAN_WIDTH)/2 (CHAN_WIDTH)/2 500 500 0 0 (SPOT_SIZE)*(CF) (SPOT_SIZE)*(CF)
-      SOURCE DIRECTION 0 0 1
-      SHIFT X (F2POSX) 
-      ROTATE Y (ANGLE) ((F2POSZ)+((CHAN_WIDTH)/2)) (F2POSX)
-      ROTATE Y 180 0 0
-
-    WINDOW Z X
-    PIXELS 51
-    TRACE PLOT OVERLAY
-    PLOT FACETS 
-    !!$VIEW 
-    
-    CONSIDER ONLY EXCITE_SPOT    
-    STATS ALL      
-    $GRAB 'TOTAL' 0 1 BASEEXCITERAYS  
-    
-    CONSIDER ONLY DETECTOR    
-    STATS ALL      
-    $GRAB 'TOTAL' 0 1 BASEEXCITATIONRAYS                         
-  
-  !!!!!!!!!!!!!!!!!!!
-  FLUX_TOTAL=(BASEEXCITERAYS)*(QE)  
-  
-  $IF (FLUX_TOTAL) GT 0 THEN  
-  RAYS 0 
-  IMMERSE WATER             !! light source is inside the water   
-
-  EMITTING SPHEROID 0 0 0 (SPOT_SIZE) (SPOT_SIZE) (SPOT_SIZE) (FLUX_TOTAL) 'FLUOROPHORE' ISO 
-  FLUX TOTAL (FLUX_TOTAL) 
-  WAVELENGTHS (EM_WAVE) UM
-  HALT 10000 
-  
-    CONSIDER ALL 
-    WINDOW Z X 
-    TRACE PLOT OVERLAY
-    PLOT FACETS
-    !!$VIEW 
-        
-    CONSIDER ONLY DETECTOR 
-    STATS ALL           
-    $GRAB 'TOTAL' 0 1 BASENUMBEROFRAYS
-
-  BASETHETA_RAYS=ACOS[1-(2*(BASENUMBEROFRAYS)/(FLUX_TOTAL))]
-  
-  $ENDIF
-  
-  $IF (BASEEXCITATIONRAYS) GT 0 THEN
-    BASE_SNR=(BASENUMBEROFRAYS)/(BASEEXCITATIONRAYS)
-  $ELSE
-    BASE_SNR=-1
-  $ENDIF
-  
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-skip
   
   !! Lens
   ENT OBJ
@@ -325,7 +281,7 @@ skip
     BEAMS COHERENT DIFFRACT
     WAVELENGTHS (EX_WAVE) UM
     WIDTHS 1.6
-    GAUSSIAN Z -(F2POSZ)-(F2LENGTH) 0 0 100 100 0 0 (SPOT_SIZE)/2 (SPOT_SIZE)/2
+    GAUSSIAN Z -(F2POSZ)-(F2LENGTH) 0 0 (EX_RAYS) (EX_RAYS) 0 0 (SPOT_DIA)/2 (SPOT_DIA)/2
       SOURCE DIRECTION 0 0 1
       SHIFT X (F2POSX) 
       ROTATE Y (ANGLE) (F2POSZ) (F2POSX)
@@ -339,21 +295,26 @@ skip
     
     CONSIDER ONLY EXCITE_SPOT    
     STATS ALL      
-    $GRAB 'TOTAL' 0 1 LENS_EX_SPOT
+    $GRAB 'TOTAL' 0 1 EX_SPOT_RAYS      
+    $GRAB 'TOTAL' 0 2 EX_SPOT_FLUX
      
     CONSIDER ONLY DETECTOR    
     STATS ALL      
-    $GRAB 'TOTAL' 0 1 LENS_EX_DET    
+    $GRAB 'TOTAL' 0 1 EX_DET_RAYS       
+    $GRAB 'TOTAL' 0 2 EX_DET_FLUX   
       
   !!!!!!!!!!!!!!!!!!!
-  FLUX_TOTAL=(LENS_EX_SPOT)*(QE)   
-    
-  $IF (FLUX_TOTAL) GT 0 THEN 
+  
+  FLUOR_TOTAL=((FLUX_RAY)/(EX_SPOT_FLUX))*(QY)*(AB_CS)  !!photons/(s*molecule)
+
+  $IF (FLUOR_TOTAL) GT 0 THEN
+
+  EM_FLUX=(FLUOR_TOTAL)*(N_MOLECULES)                  !!photons/s 
   RAYS 0 
   IMMERSE WATER             !! light source is inside the water 
     
-  EMITTING SPHEROID 0 0 0 (SPOT_SIZE) (SPOT_SIZE) (SPOT_SIZE) (FLUX_TOTAL) 'FLUOROPHORE' ISO 
-  FLUX TOTAL (FLUX_TOTAL) 
+  EMITTING SPHEROID 0 0 0 (SPOT_DIA)/2 (SPOT_DIA)/2 (SPOT_DIA)/2 (EM_RAYS) 'FLUOROPHORE' ISO 
+  FLUX TOTAL (EM_FLUX) 
   WAVELENGTHS (EM_WAVE) UM 
   HALT 10000 
   
@@ -365,16 +326,17 @@ skip
     
     CONSIDER ONLY DETECTOR 
     STATS ALL
-    $GRAB 'TOTAL' 0 1 NUMBEROFRAYS
+    $GRAB 'TOTAL' 0 1 SPOT_DET_RAYS
+    $GRAB 'TOTAL' 0 2 SPOT_DET_FLUX
         
-  LENSTHETA_RAYS=ACOS[1-(2*(NUMBEROFRAYS)/(FLUX_TOTAL))]
+  THETA=ACOS[1-(2*(SPOT_DET_RAYS)/(EM_RAYS))]
   $ENDIF
 
   
-  $IF (LENS_EX_DET) GT 0 THEN
-    LENS_SNR=(NUMBEROFRAYS)/(LENS_EX_DET)
+  $IF (EX_DET_FLUX) GT 0 THEN
+    SNR=(SPOT_DET_FLUX)/(EX_DET_FLUX)
   $ELSE
-    LENS_SNR=-1
+    SNR=-1
   $ENDIF
   
 !!WRITES TO TEXT FILE ON EACH PASS
@@ -382,7 +344,7 @@ $ECHO NONE
 $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\SIMPLE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
 $END
 $SCR 1
-\EM_WAVE.\, \EX_WAVE.\, \QE.\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \BFL.\ ,\PDMS_CHAN_LENS.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \AIR_GAP.\,  \ANGLE.\, \F2POSX.\, \DET_RAD.\, \BASE_EX_SPOT.\ , \LENS_EX_SPOT.\, \BASENUMBEROFRAYS.\ , \NUMBEROFRAYS.\, \BASETHETA_RAYS.\, \LENSTHETA_RAYS.\, \BASE_EX_DET.\ , \LENS_EX_DET.\, \BASE_SNR.\, \LENS_SNR.\
+\EX_POW.\, \EX_WAVE.\, \EM_WAVE.\, \N_MOLECULES_VOL.\, \SPOT_DIA\, \QY.\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \PDMS_CHAN_LENS.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \AIR_GAP.\,  \ANGLE.\, \F2POSX.\, \DET_RAD.\, \EX_DET_RAYS.\, \EX_DET_FLUX.\, \EX_SPOT_RAYS.\, \EX_SPOT_FLUX.\, \SPOT_DET_RAYS.\, \SPOT_DET_FLUX.\, \THETA.\, \SNR.\
 $IO OUTPUT CLOSE
 $ECHO
 
