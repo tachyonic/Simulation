@@ -6,13 +6,30 @@ $END
 $SCR 1
 \
 $SCR 1
-BASELINE, 150 sapph, bare channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
+BASELINE, 150 sapph/CUBIC ZIRCONIA, REFLECTIVE BOTTOM channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
 $SCR 1 
-EX_POW (W), EXCIT (um), EMIS (um), SPOT_DIA, N_LENS, LENS_DIA (um), EFL (um), PDMS_LENS_DET (um), WD_PDMS, ANG, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
+EX_POW (W), SPOT_DIA, N_LENS, LENS_DIA (um), EFL (um), PDMS_LENS_DET (um), WD_PDMS, ANG, X_SHIFT, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
 $IO OUTPUT CLOSE
 $ECHO
 
 !! nested macros  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+LOOP_4 {
+ $ITER N_LENS 1.76 2.21 -2
+  {
+    &REG N_LENS
+    
+    $ECHO NONE
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $END
+    $SCR 1
+, , \N_LENS.\ 
+    $IO OUTPUT CLOSE
+    $ECHO
+  
+    $LOOP_3 ?  
+  }
+}
 
 LOOP_3 {
   $ITER DIFF_MMF 0 50 -2
@@ -23,7 +40,7 @@ LOOP_3 {
     $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1
-, , , , , , , , ,  , , , , \DIFF_MMF.\,
+, , , , ,  , , , , \DIFF_MMF.\,
     $IO OUTPUT CLOSE
     $ECHO 
   
@@ -33,14 +50,14 @@ LOOP_3 {
 
 
 LOOP_2 {
-  $ITER DET_RAD 75 150 -3  
+  $ITER DET_RAD 75 250 -5  
   {
     &REG DET_RAD
     $ECHO NONE
     $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1
-, , , , , ,  , , , , , , , \DET_RAD.\
+, ,, , ,  ,, ,,, \DET_RAD.\
     $IO OUTPUT CLOSE
     $ECHO  
 
@@ -50,7 +67,7 @@ LOOP_2 {
 }
 
 LOOP_1 {                        
-$ITER PDMS_LENS_DET 0 90 -10 SPOT_DET 
+$ITER PDMS_LENS_DET 0 100 -11 SPOT_DET 
   {  
   &REG PDMS_LENS_DET
   
@@ -89,7 +106,11 @@ MAIN {
   FLUX_RAY=(EX_FLUX)/((PI)*((SPOT_DIA)/2)^2)    !! #source photons/second per um area       
   
       
-  !! Simulation Variables
+  !! Simulation Variables 
+  !!N_LENS=1.768
+  N_EFF=(N_LENS)/1.43
+  N_CORE=1.46
+  N_CLAD=1.44
   
   !! Chip variables
   CHIP_LENGTH=5000            !! Length and width of microchip
@@ -115,10 +136,6 @@ MAIN {
   WAVELENGTHS (EM_WAVE) UM 
 
   !! Define media
-  N_LENS=1.768
-  N_EFF=(N_LENS)/1.43
-  N_CORE=1.46
-  N_CLAD=1.44
   MEDIA ; 1.43      ABSORB 0.00000004     'PDMS'
   MEDIA ; (N_LENS)  ABSORB 0.0000000003   'BALL'
   MEDIA ; 1.51                            'GLASS'
@@ -136,9 +153,7 @@ MAIN {
   LEVEL 1000 OFF 
   FRESNEL AVE                 !! fresnel equation
   
-  !! Coating properties 
-  COAT_REFL=1 !!R^2
-  COAT_TRANS=1-(COAT_REFL)^2
+  !! Coating properties
   COATING PROPERTIES 0; 0 1 'TRANSMIT' 
   COATING PROPERTIES 0; 0 0 'ABSORB' 
   COATING PROPERTIES 0; 1 0 'REFLECT'
@@ -158,7 +173,7 @@ MAIN {
   INTERFACE COATING BARE WATER PDMS 
   
   PLANE Z -(CHAN_WIDTH)/2 RECTANGLE (CHIP_LENGTH)/2.2 (CHAN_WIDTH)/2 'CHANNEL.B0TTOM' 
-  INTERFACE COATING BARE WATER PDMS 
+  INTERFACE COATING REFLECT WATER PDMS 
   
   PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.BACK' 
   INTERFACE COATING BARE WATER PDMS
@@ -278,7 +293,7 @@ $ECHO
   $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
   $END
   $SCR 1 
-\EX_POW.\, \EX_WAVE.\, \EM_WAVE.\, \SPOT_DIA\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \ANGLE.\, \DIFF_MMF.\, \DET_RAD.\, \EX_DET_R.\, \EX_DET_F.\, \EX_SPOT_R.\, \EX_SPOT_F.\, \SPOT_DET_R.\, \SPOT_DET_F.\, \THETA.\, \SNR.\
+\EX_POW.\, \SPOT_DIA\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \ANGLE.\, \F2POSX.\, \DIFF_MMF.\, \DET_RAD.\, \EX_DET_R.\, \EX_DET_F.\, \EX_SPOT_R.\, \EX_SPOT_F.\, \SPOT_DET_R.\, \SPOT_DET_F.\, \THETA.\, \SNR.\
   $IO OUTPUT CLOSE
   $ECHO
 
@@ -354,7 +369,7 @@ EXCITATION  {
   THETA=ACOS[1-(2*(SPOT_DET_R)/(EM_RAYS))]
   $ENDIF
   
-  $IF (EX_DET_FLUX) GT 0 THEN
+  $IF (EX_DET_F) GT 0 THEN
     SNR=(SPOT_DET_F)/(EX_DET_F)
   $ELSE
     SNR=-1
@@ -364,7 +379,7 @@ EXCITATION  {
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-$LOOP_3 ?
+$LOOP_4 ?
                             
 RETURN
 
