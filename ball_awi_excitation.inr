@@ -1,87 +1,94 @@
+!! file definitions  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 $GUI Plot Link
-
-  $ECHO NONE
-  $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)
-  $END
-  $SCR 1
+$ECHO NONE
+$IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)
+$END
+$SCR 1
 \
-  $SCR 1
-BASELINE, bare channel, bare ball, CY5 fluorophore
-  $SCR 1
-EX_POW (W), EXCIT (um), EMIS (um), SPOT_DIA, QY, N_LENS, LENS_DIA (um), EFL (um), PDMS_CHAN_LENS (um), PDMS_LENS_DET (um), WD_PDMS, ANG, EX_XSHIFT, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
+$SCR 1
+BASELINE, 150 sapph, bare channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
+$SCR 1 
+EX_POW (W), EXCIT (um), EMIS (um), SPOT_DIA, N_LENS, LENS_DIA (um), EFL (um), PDMS_LENS_DET (um), WD_PDMS, ANG, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
+$IO OUTPUT CLOSE
+$ECHO
 
-  $IO OUTPUT CLOSE
-  $ECHO
+!! nested macros  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+LOOP_3 {
+  $ITER DIFF_MMF 0 50 -2
+  {
+    &REG DIFF_MMF
+   
+    $ECHO NONE
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $END
+    $SCR 1
+, , , , , , , , ,  , , , , \DIFF_MMF.\,
+    $IO OUTPUT CLOSE
+    $ECHO 
+  
+      $LOOP_2 ?  
+  }     
+}
 
 
-  $ECHO NONE 
-LOOP_1 {  !! nested macros
-                        
-$ITER PDMS_LENS_DET 0 100 -11 SPOT_DET 
+LOOP_2 {
+  $ITER DET_RAD 75 150 -3  
+  {
+    &REG DET_RAD
+    $ECHO NONE
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $END
+    $SCR 1
+, , , , , ,  , , , , , , , \DET_RAD.\
+    $IO OUTPUT CLOSE
+    $ECHO  
+
+    $LOOP_1 ?
+     
+  }     
+}
+
+LOOP_1 {                        
+$ITER PDMS_LENS_DET 0 90 -10 SPOT_DET 
   {  
   &REG PDMS_LENS_DET
   
-  CONSIDER ALL
-  SYSTEM NEW
-  RESET 
+  $MAIN ?
+ 
+  }                         !!end of iteration loop     
+}
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+MAIN {  
   
+  $ECHO NONE 
+
   !! Fundamental constants
   PLANCK=6.6267e-34
   C_LIGHT=3e+8
   PI=ACOS(-1)
+  &REG PI
   
-  !! OPTICAL
-  FRESNEL AVE
-  EM_WAVE=0.670               !! emission wavelength
-  EX_WAVE=0.650               !! emission wavelength
+  !! OPTICAL  
+  $READ FLUOR_CY5                                     
+  
   EX_POW=400e-6               !! excitation power
+  EX_RAYS=300                   !! (EX_RAYS)^2 * NPHOTONS=EX_FLUX   
+  EM_RAYS=10000                 !! EM_RAYS * NPHOTONS=EM_FLUX 
   
-  QY=0.3                              !! quantum yeild
-  ME=250000                           !! molar extinction
-  AB_CS=(ME)*3.82E-21*100000000       !! absorption cross section (um^2/molecule)  
-
   SPOT_DIA=10
   N_MOLECULES_VOL=0.2                       !! number of molecules in 1 um^3
-  SPOT_VOL=(4/3)*(PI)*((SPOT_DIA)/2)^3
+  SPOT_VOL=(PI)*(SPOT_DIA)^3
   N_MOLECULES=(SPOT_VOL)*(N_MOLECULES_VOL)  !!number of molecules in optical path
    
   PH_ENERGY=(PLANCK)*(C_LIGHT)/((EX_WAVE)*(10^-6))  
   EX_FLUX=(EX_POW)/(PH_ENERGY)                  !! Let flux represent #source photons/second 
-  FLUX_RAY=(EX_FLUX)/((PI)*((SPOT_DIA)/2)^2)    !! per um area      
+  FLUX_RAY=(EX_FLUX)/((PI)*((SPOT_DIA)/2)^2)    !! #source photons/second per um area       
   
-  
-  EX_RAYS=250                   !! (EX_RAYS)^2 * NPHOTONS=EX_FLUX   
-  EM_RAYS=10000                 !! EM_RAYS * NPHOTONS=EM_FLUX 
       
-  !! Define units and wavelength
-  UNITS MICRONS 'Watts" 
-  WAVELENGTHS (EM_WAVE) UM
-
-  !! Define media
-  !!N_LENS=1.768
-  N_EFF=(N_LENS)/1.43
-  N_CORE=1.46
-  N_CLAD=1.44
-  MEDIA ; 1.43     'PDMS'
-  MEDIA ; 1.51     'GLASS'
-  MEDIA ; 1.33     'WATER'
-  MEDIA ; (N_LENS) 'BALL'
-  MEDIA ; (N_CLAD) 'DOPED 
-  MEDIA ; (N_CORE) 'SILICA'
-                      
-  !! Including 
-  SPLIT 1500 MONTECARLO       !! monte carlo simulation
-  LEVEL 1000 OFF 
-  FRESNEL AVE                 !! fresnel equation
-
-  !! Coating properties
-  COAT_REFL=-1 !!R^2
-  !!COAT_TRANS=1-(COAT_REFL)^2
-  COATING PROPERTIES 0; 0 1 'TRANSMIT' 
-  COATING PROPERTIES 0; 0 0 'ABSORB' 
-  COATING PROPERTIES 0; 1 0 'REFLECT' 
-  !!COATING PROPERTIES 0; (COAT_REFL) (COAT_TRANS) 'REFL_COAT' 
-    
   !! Simulation Variables
   
   !! Chip variables
@@ -91,23 +98,52 @@ $ITER PDMS_LENS_DET 0 100 -11 SPOT_DET
   CHAN_WIDTH=25
   
   !! Lens dimensions
-  !!LENS_DIA=150                 !! Diamter of the lens
-  LENS_RAD=(LENS_DIA)/2  
+  LENS_DIA=150
+  $READ LENS_BALL_CALC        
   
-      TERM_A=(N_EFF)-1
-      TERM_B=2/(LENS_RAD)
-      TERM_C=((TERM_A)*(LENS_DIA))/((N_EFF)*(LENS_RAD)*(LENS_RAD))
-      LENS_P=(TERM_A)*((TERM_B)-(TERM_C))
-
-  EFL=1/(LENS_P)
-  BFL=(EFL)-(LENS_RAD)
-  
-  PDMS_CHAN_LENS=(BFL)  !! Thickness of PDMS layer above the channel
-  !!PDMS_LENS_DET=170
-  
-  AIR_GAP=2                   !! air gap beneath detector
-  !!DET_RAD=50
+  !!$DIA_ERROR  ?
+  PDMS_CHAN_LENS=(BFL)  !! Thickness of PDMS layer above the channel  
+  AIR_GAP=2             !! air gap beneath detector
   WD_PDMS=(PDMS_CHAN_LENS)+(LENS_DIA)+(PDMS_LENS_DET)
+  
+  CONSIDER ALL
+  SYSTEM NEW
+  RESET
+    
+  !! Define units and wavelength
+  UNITS MICRONS 'Watts" 
+  WAVELENGTHS (EM_WAVE) UM 
+
+  !! Define media
+  N_LENS=1.768
+  N_EFF=(N_LENS)/1.43
+  N_CORE=1.46
+  N_CLAD=1.44
+  MEDIA ; 1.43      ABSORB 0.00000004     'PDMS'
+  MEDIA ; (N_LENS)  ABSORB 0.0000000003   'BALL'
+  MEDIA ; 1.51                            'GLASS'
+  MEDIA ; 1.33                            'WATER'
+  MEDIA ; (N_CLAD)                        'DOPED 
+  MEDIA ; (N_CORE)                        'SILICA'
+
+  !!$READ MEDIA_PDMS 
+  !!$READ MEDIA_SAPPHIRE
+  
+  FRESNEL AVE
+                    
+  !! Including 
+  SPLIT 1500 MONTECARLO       !! monte carlo simulation
+  LEVEL 1000 OFF 
+  FRESNEL AVE                 !! fresnel equation
+  
+  !! Coating properties 
+  COAT_REFL=1 !!R^2
+  COAT_TRANS=1-(COAT_REFL)^2
+  COATING PROPERTIES 0; 0 1 'TRANSMIT' 
+  COATING PROPERTIES 0; 0 0 'ABSORB' 
+  COATING PROPERTIES 0; 1 0 'REFLECT'
+  COATING PROPERTIES 0; 0.005 0.995 'COAT_BALL'
+  COATING PROPERTIES 0; 0 (1-(QY)) 'SPOT'  
    
   !! Bounding Surface 
   SURFACE 
@@ -224,22 +260,42 @@ $ITER PDMS_LENS_DET 0 100 -11 SPOT_DET
     INTERFACE COATING ABSORB AIR DOPED                                                                                                                                 
 
 !! Excitation Spot
-  ELLIPSOID (SPOT_DIA)/2 (SPOT_DIA)/2 (SPOT_DIA)/2 0 0 0 'EXCITE_SPOT'
-  INTERFACE COATING TRANSMIT WATER WATER
-  
-!! Lens
+  PLANE Z 0 ELLIPSE 2@(SPOT_DIA)/2  'EXCITE_SPOT'
+  SHIFT X -(SPOT_DIA)/2
+  INTERFACE COATING SPOT WATER WATER
+
+!! Lens    
 !!  ELLIPSOID 3@(LENS_RAD) 0 0 (PDMS_CHAN_LENS)+(LENS_RAD) 'BALL_LENS'
-!!    INTERFACE COATING BARE PDMS BALL
+!!    INTERFACE COATING COAT_BALL PDMS BALL
 !!    REDEFINE COLOR 1
-    
-    !!!!!!!!!!!!!!!!!!!      
+
+  $EXCITATION ?
+
+$ECHO
+        
+!!WRITES TO TEXT FILE ON EACH PASS
+  $ECHO NONE
+  $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+  $END
+  $SCR 1 
+\EX_POW.\, \EX_WAVE.\, \EM_WAVE.\, \SPOT_DIA\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \ANGLE.\, \DIFF_MMF.\, \DET_RAD.\, \EX_DET_R.\, \EX_DET_F.\, \EX_SPOT_R.\, \EX_SPOT_F.\, \SPOT_DET_R.\, \SPOT_DET_F.\, \THETA.\, \SNR.\
+  $IO OUTPUT CLOSE
+  $ECHO
+
+}
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+EXCITATION  {
+
     RAYS 0
     IMMERSE SILICA
     PARABASALS 4
     BEAMS COHERENT DIFFRACT
     WAVELENGTHS (EX_WAVE) UM
     WIDTHS 1.6
-    GAUSSIAN Z -(F2POSZ)-(F2LENGTH) 0 0 (EX_RAYS) (EX_RAYS) 0 0 (SPOT_DIA)/2 (SPOT_DIA)/2
+    GAUSSIAN Z -(F2POSZ)-(F2LENGTH) 2@0 2@(EX_RAYS) 2@0 2@(SPOT_DIA)/2
       SOURCE DIRECTION 0 0 1
       SHIFT X (F2POSX) 
       ROTATE Y (ANGLE) (F2POSZ) (F2POSX)
@@ -253,31 +309,35 @@ $ITER PDMS_LENS_DET 0 100 -11 SPOT_DET
     
     CONSIDER ONLY EXCITE_SPOT    
     STATS ALL      
-    $GRAB 'TOTAL' 0 1 EX_SPOT_RAYS      
-    $GRAB 'TOTAL' 0 2 EX_SPOT_FLUX
+    $GRAB 'TOTAL' 0 1 EX_SPOT_R      
+    $GRAB 'TOTAL' 0 2 EX_SPOT_F
      
     CONSIDER ONLY DETECTOR    
     STATS ALL      
-    $GRAB 'TOTAL' 0 1 EX_DET_RAYS       
-    $GRAB 'TOTAL' 0 2 EX_DET_FLUX 
-      
+    $GRAB 'TOTAL' 0 1 EX_DET_R       
+    $GRAB 'TOTAL' 0 2 EX_DET_F 
+                     
+                     
   !!!!!!!!!!!!!!!!!!!
-  $IF (EX_SPOT_FLUX) GT 0 THEN
-    FLUOR_TOTAL=((FLUX_RAY)/(EX_SPOT_FLUX))*(QY)*(AB_CS)  !!photons/(s*molecule)
+  &REG EX_SPOT_F
+  $IF (EX_SPOT_F) GT 0 THEN
+    FLUOR_TOTAL=(FLUX_RAY)*(AB_CS)*(QY)  !!photons/(s*molecule)
   $ELSE
     FLUOR_TOTAL=0
   $ENDIF
+  &REG FLUOR_TOTAL
   
-  
+  !!!!!!!!!!!!!!!!!!!
   $IF (FLUOR_TOTAL) GT 0 THEN
 
   EM_FLUX=(FLUOR_TOTAL)*(N_MOLECULES)                  !!photons/s 
+  &REG EM_FLUX
+    
   RAYS 0 
   IMMERSE WATER             !! light source is inside the water 
-    
-  EMITTING SPHEROID 0 0 0 (SPOT_DIA)/2 (SPOT_DIA)/2 (SPOT_DIA)/2 (EM_RAYS) 'FLUOROPHORE' ISO 
-  FLUX TOTAL (EM_FLUX) 
-  WAVELENGTHS (EM_WAVE) UM 
+  WAVELENGTHS (EM_WAVE) UM   
+  EMITTING SPHEROID 3@0 3@(SPOT_DIA)/2 (EM_RAYS) 'FLUOROPHORE' ISO
+  FLUX TOTAL (EM_FLUX)  
   HALT 10000 
   
     CONSIDER ALL 
@@ -288,100 +348,23 @@ $ITER PDMS_LENS_DET 0 100 -11 SPOT_DET
     
     CONSIDER ONLY DETECTOR 
     STATS ALL
-    $GRAB 'TOTAL' 0 1 SPOT_DET_RAYS
-    $GRAB 'TOTAL' 0 2 SPOT_DET_FLUX
+    $GRAB 'TOTAL' 0 1 SPOT_DET_R
+    $GRAB 'TOTAL' 0 2 SPOT_DET_F
         
-  THETA=ACOS[1-(2*(SPOT_DET_RAYS)/(EM_RAYS))]
+  THETA=ACOS[1-(2*(SPOT_DET_R)/(EM_RAYS))]
   $ENDIF
   
   $IF (EX_DET_FLUX) GT 0 THEN
-    SNR=(SPOT_DET_FLUX)/(EX_DET_FLUX)
+    SNR=(SPOT_DET_F)/(EX_DET_F)
   $ELSE
     SNR=-1
   $ENDIF
 
-  $ECHO 
-  
-!!WRITES TO TEXT FILE ON EACH PASS
-  $ECHO NONE
-  $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
-  $END
-  $SCR 1
-\EX_POW.\, \EX_WAVE.\, \EM_WAVE.\, \SPOT_DIA\, \QY.\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \PDMS_CHAN_LENS.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \ANGLE.\, \F2POSX.\, \DIFF_MMF.\, \DET_RAD.\, \EX_DET_RAYS.\, \EX_DET_FLUX.\, \EX_SPOT_RAYS.\, \EX_SPOT_FLUX.\, \SPOT_DET_RAYS.\, \SPOT_DET_FLUX.\, \THETA.\, \SNR.\
-  $IO OUTPUT CLOSE
-  $ECHO
- 
-  }                         !!end of iteration loop
-
 }
 
-LOOP_2 {
-  $ITER DET_RAD 50 150 -6  
-  {
-    &REG DET_RAD
-  $ECHO NONE
-  $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
-  $END
-  $SCR 1
-, , , , , ,  , , , , , , , \DET_RAD.\
-  $IO OUTPUT CLOSE
-  $ECHO  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    $LOOP_1 ?
-     
-  }     
-}
-
-LOOP_3 {
-  $ITER DIFF_MMF 0 100 -3
-  {
-    &REG DIFF_MMF
-   
-$ECHO NONE
-$IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
-$END
-$SCR 1
-, , , , , , , , ,  , , , , \DIFF_MMF.\,
-$IO OUTPUT CLOSE
-$ECHO 
-  
-      $LOOP_2 ?  
-  }     
-}
-
-LOOP_4 {
-  $ITER LENS_DIA 150 250 -2  
-  {
-    &REG LENS_DIA
-   
-$ECHO NONE
-$IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
-$END
-$SCR 1
-, , , , , , \LENS_DIA.\
-$IO OUTPUT CLOSE
-$ECHO 
-  
-      $LOOP_3 ?  
-  }     
-}
-
-  $ITER N_LENS 1.768 2.17 -2  
-  { 
-    
-    &REG N_LENS
-$ECHO NONE
-$IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
-$END
-$SCR 1
-, , , , , \N_LENS.\
-$IO OUTPUT CLOSE
-$ECHO 
-  
-    $LOOP_4 ?
-  }
-
-
+$LOOP_3 ?
                             
 RETURN
 

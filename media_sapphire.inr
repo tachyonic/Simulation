@@ -1,0 +1,8 @@
+!! http://www.crystran.co.uk/userfiles/files/sapphire-al2o3-data-sheet.pdf
+
+WAVELENGTHS 0.193 0.458 0.532 0.633 0.670  0.780 0.980  1.550 4.762 UM
+MEDIA ;  1.92  1.77  1.77  1.76  1.76  1.75 1.75  1.74  1.63  ABSORB 0.0003E-6  'BALL'
+
+COATING PROPERTIES 0; 0.14 0.86 'COAT_BALL'
+
+N_LENS=1.76

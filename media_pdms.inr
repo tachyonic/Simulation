@@ -1,0 +1,10 @@
+!! http://www.sciencedirect.com/science/article/pii/S0924424709000466
+!! http://www.ijesit.com/Volume%203/Issue%202/IJESIT201402_70.pdf
+
+N_PDMS_LOW=SQRT(1+((1.0057*((EX_WAVE)*1000)^2)/(-(13217)+((EX_WAVE)*1000)^2)))
+N_PDMS_HIGH=SQRT(1+((1.0057*((EM_WAVE)*1000)^2)/(-(13217)+((EM_WAVE)*1000)^2)))
+
+WAVELENGTHS (EX_WAVE) (EM_WAVE) UM
+MEDIA ; (N_PDMS_LOW) (N_PDMS_HIGH) ABSORB 0.004E-6 'PDMS'
+  
+N_PDMS=1.43

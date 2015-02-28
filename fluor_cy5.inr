@@ -1,0 +1,5 @@
+EM_WAVE=0.670       !! emission wavelength
+EX_WAVE=0.625       !! emission wavelength
+QY=0.28				      !! quantum efficiency
+ME=250000                           !! molar extinction
+AB_CS=(ME)*3.82E-21*100000000       !! absorption cross section (um^2/molecule) 			
