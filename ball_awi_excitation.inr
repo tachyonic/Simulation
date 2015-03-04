@@ -6,7 +6,7 @@ $END
 $SCR 1
 \
 $SCR 1
-BASELINE, 150 sapph/CUBIC ZIRCONIA, REFLECTIVE BOTTOM channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
+BASE, 250 SAPPH/CUBIC ZIRCONIA, REFLECTING TOP and SIDE channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
 $SCR 1 
 EX_POW (W), SPOT_DIA, N_LENS, LENS_DIA (um), EFL (um), PDMS_LENS_DET (um), WD_PDMS, ANG, X_SHIFT, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
 $IO OUTPUT CLOSE
@@ -50,7 +50,7 @@ LOOP_3 {
 
 
 LOOP_2 {
-  $ITER DET_RAD 75 250 -5  
+  $ITER DET_RAD 100 300 -5  
   {
     &REG DET_RAD
     $ECHO NONE
@@ -93,7 +93,7 @@ MAIN {
   $READ FLUOR_CY5                                     
   
   EX_POW=400e-6               !! excitation power
-  EX_RAYS=300                   !! (EX_RAYS)^2 * NPHOTONS=EX_FLUX   
+  EX_RAYS=250                   !! (EX_RAYS)^2 * NPHOTONS=EX_FLUX   
   EM_RAYS=10000                 !! EM_RAYS * NPHOTONS=EM_FLUX 
   
   SPOT_DIA=10
@@ -119,7 +119,7 @@ MAIN {
   CHAN_WIDTH=25
   
   !! Lens dimensions
-  LENS_DIA=150
+  LENS_DIA=250
   $READ LENS_BALL_CALC        
   
   !!$DIA_ERROR  ?
@@ -176,11 +176,11 @@ MAIN {
   INTERFACE COATING REFLECT WATER PDMS 
   
   PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.BACK' 
-  INTERFACE COATING BARE WATER PDMS
+  INTERFACE COATING REFLECT WATER PDMS
   SHIFT Y (CHAN_WIDTH)/2 
   
   PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.FRONT' 
-  INTERFACE COATING BARE WATER PDMS
+  INTERFACE COATING REFLECT WATER PDMS
   SHIFT Y -(CHAN_WIDTH)/2 
   
   PLANE X 0 RECTANGLE (CHAN_WIDTH)/2 (CHAN_WIDTH)/2 'CHANNEL.RIGHT' 
