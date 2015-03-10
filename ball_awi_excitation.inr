@@ -1,12 +1,12 @@
 !! file definitions  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 $GUI Plot Link
 $ECHO NONE
-$IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)
+$IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWITOL.CSV +FILE(10)
 $END
 $SCR 1
 \
 $SCR 1
-LENS WITH -20UM DIA ERROR, BARE channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
+BASELINE WITH +/-20UM DIA ERROR, BARE channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
 $SCR 1 
 EX_POW (W), SPOT_DIA, N_LENS, LENS_DIA (um), EFL (um), PDMS_LENS_DET (um), WD_PDMS, ANG, X_SHIFT, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
 $IO OUTPUT CLOSE
@@ -20,7 +20,7 @@ LOOP_5 {
     &REG N_LENS
     
     $ECHO NONE
-    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWITOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1
 , , \N_LENS.\ 
@@ -37,7 +37,7 @@ LOOP_4 {
     &REG LENS_DIA
     
     $ECHO NONE
-    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWITOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1
 , , ,\LENS_DIA.\ 
@@ -54,7 +54,7 @@ LOOP_3 {
     &REG DIFF_MMF
    
     $ECHO NONE
-    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWITOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1
 , , , , ,  , , , , \DIFF_MMF.\,
@@ -71,7 +71,7 @@ LOOP_2 {
   {
     &REG DET_RAD
     $ECHO NONE
-    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWITOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1
 , ,, , ,  ,, ,,, \DET_RAD.\
@@ -97,6 +97,9 @@ $ITER PDMS_LENS_DET 0 100 -21 SPOT_DET
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 MAIN {  
+  CONSIDER ALL
+  SYSTEM NEW 
+  !!RESET
   
   $ECHO NONE 
 
@@ -104,7 +107,6 @@ MAIN {
   PLANCK=6.6267e-34
   C_LIGHT=3e+8
   PI=ACOS(-1)
-  &REG PI
   
   !! OPTICAL  
   $READ FLUOR_CY5                                     
@@ -136,17 +138,12 @@ MAIN {
   CHAN_WIDTH=25
   
   !! Lens dimensions
-  LENS_DIA=250
   $READ LENS_BALL_CALC        
   
   !!$DIA_ERROR  ?
   PDMS_CHAN_LENS=(BFL)  !! Thickness of PDMS layer above the channel  
   AIR_GAP=2             !! air gap beneath detector
   WD_PDMS=(PDMS_CHAN_LENS)+(LENS_DIA)+(PDMS_LENS_DET)
-  
-  CONSIDER ALL
-  SYSTEM NEW
-  RESET
     
   !! Define units and wavelength
   UNITS MICRONS 'Watts" 
@@ -297,9 +294,9 @@ MAIN {
   INTERFACE COATING SPOT WATER WATER
 
 !! Lens    
-  ELLIPSOID 3@((LENS_RAD)-10) 0 0 (PDMS_CHAN_LENS)+(LENS_RAD) 'BALL_LENS'
-    INTERFACE COATING COAT_BALL PDMS BALL
-    REDEFINE COLOR 1
+!!  ELLIPSOID 3@((LENS_RAD)-10) 0 0 (PDMS_CHAN_LENS)+(LENS_RAD) 'BALL_LENS'
+!!    INTERFACE COATING COAT_BALL PDMS BALL
+!!    REDEFINE COLOR 1
 
   $EXCITATION ?
 
@@ -307,7 +304,7 @@ $ECHO
         
 !!WRITES TO TEXT FILE ON EACH PASS
   $ECHO NONE
-  $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIEXCITE.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+  $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWITOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
   $END
   $SCR 1 
 \EX_POW.\, \SPOT_DIA\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \ANGLE.\, \F2POSX.\, \DIFF_MMF.\, \DET_RAD.\, \EX_DET_R.\, \EX_DET_F.\, \EX_SPOT_R.\, \EX_SPOT_F.\, \SPOT_DET_R.\, \SPOT_DET_F.\, \THETA.\, \SNR.\
@@ -391,7 +388,6 @@ EXCITATION  {
   $ELSE
     SNR=-1
   $ENDIF
-
 }
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
