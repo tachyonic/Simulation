@@ -1,0 +1,74 @@
+
+*** KAI statistics library  k3301
+
+
+*** Begin Task 0
+
+Environment variables:
+  OMP_NUM_THREADS  : 1           
+  OMP_SCHEDULE     : static      
+  OMP_DYNAMIC      : FALSE       
+  OMP_NESTED       : FALSE       
+  KMP_STATSFILE    : guide.gvs    
+  KMP_STATSCOLS    : 80          
+  KMP_INTERVAL     : 0           
+  KMP_BLOCKTIME    : 200         
+  KMP_PARALLEL     : 1           
+  KMP_STACKSIZE    : 4194304     
+  KMP_STACKOFFSET  : 0           
+  KMP_SCHEDULING   : <unknown>    
+  KMP_CHUNK        : <unknown>    
+  KMP_LIBRARY      : throughput    
+end
+
+System parameters:
+  start      : Wed Mar 11 08:26:38 2015    
+  stop       : Wed Mar 11 08:26:38 2015    
+  host       : LILGELAB-PC    
+  ncpu       : 4           
+end
+
+Region counts:
+  serial regions   : 1           
+  barrier regions  : 0           
+  parallel regions : 0           
+end
+
+Program execution time (in seconds):
+  cpu              :     2.42 sec    
+  elapsed          :     0.00 sec    
+    serial         :     0.00 sec    
+    parallel       :     0.00 sec    
+  cpu percent      : 12866496.88 %    
+end
+
+Summary over all regions (has 1 threads):
+# Thread                #0
+end
+
+Serial program regions:
+  Serial region #1 executes for 0.00 seconds
+    begins at START OF PROGRAM
+    ends at END OF PROGRAM
+end
+
+Serial region #1 profile:
+# Thread       Incl     Excl Routine 
+end
+
+Program events (total):
+# Thread                #0
+  mppbeg        :        1
+  mppend        :        1
+  serial        :        1
+end
+
+Serial section events:
+# Serial                #1
+  mppbeg        :        1
+  mppend        :        1
+  serial        :        1
+end
+
+*** end
+
