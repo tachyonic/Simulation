@@ -7,10 +7,10 @@ load('cy5_excite_data.mat')
 % goal: determine which ball to buy and feasible fabrication diameters
 % see SNR and theta data for bare channel case with 150 and 250 diameter sapphire balls
 
-titlestr='250um Sapphire Ball, xdiff=0, Bare Channel';
-data=s250_bare_lens;
-bdata=s250_bare_base;
-diff=0;
+%titlestr='250um Cubic Zirconia Ball, xdiff=50, Bare Channel';
+data=cz250_bot_side_lens;
+bdata=cz250_bot_side_base;
+diff=50;
 
 dr = data(data(:,10)==diff,11);
 pdms = data(data(:,10)==diff,6);
@@ -21,44 +21,46 @@ btheta = bdata(bdata(:,10)==diff,18);
 taper = bdata(bdata(:,10)==diff,8);
 dtheta = theta-btheta;
 
-[drq,wdq] = meshgrid(min(dr):2.5:max(dr),min(wd):0.5:max(wd));
+dataset=[dr pdms wd taper btheta theta dtheta snr snr];
 
-subplot(3,1,1);
-scatter3(dr,wd,snr,'.');
-hold on;
-snrq = griddata(dr,wd,snr,drq,wdq);
-mesh(drq,wdq,snrq);
-hold on;
-set(gca, 'ZScale', 'log')
-title({titlestr, 'SNR against Working Distance and Detector Radius'});
-xlabel('DETECTOR RADIUS');
-ylabel('WORKING DISTANCE');
-zlabel('SNR');
-
-subplot(3,1,2);
-scatter3(dr,wd,theta,'.');
-hold on;
-thetaq = griddata(dr,wd,theta,drq,wdq);
-mesh(drq,wdq,thetaq);
-alpha(.4);
-hold on;
-
-title({titlestr, '\theta against Working Distance and Detector Radius'});
-xlabel('DETECTOR RADIUS');
-ylabel('WORKING DISTANCE');
-zlabel('\theta');
-
-subplot(3,1,3);
-scatter3(dr,wd,theta-btheta,'x');
-hold on;
-thetabq = griddata(dr,wd,theta-btheta,drq,wdq);
-mesh(drq,wdq,thetabq);
-hold on;
-
-title({titlestr, '\theta Improvement against Working Distance and Detector Radius'});
-xlabel('DETECTOR RADIUS');
-ylabel('WORKING DISTANCE');
-zlabel('\Delta\theta');
+% [drq,wdq] = meshgrid(min(dr):2.5:max(dr),min(wd):0.5:max(wd));
+% 
+% subplot(3,1,1);
+% scatter3(dr,wd,snr,'.');
+% hold on;
+% snrq = griddata(dr,wd,snr,drq,wdq);
+% mesh(drq,wdq,snrq);
+% hold on;
+% set(gca, 'ZScale', 'log')
+% title({titlestr, 'SNR against Working Distance and Detector Radius'});
+% xlabel('DETECTOR RADIUS');
+% ylabel('WORKING DISTANCE');
+% zlabel('SNR');
+% 
+% subplot(3,1,2);
+% scatter3(dr,wd,theta,'.');
+% hold on;
+% thetaq = griddata(dr,wd,theta,drq,wdq);
+% mesh(drq,wdq,thetaq);
+% alpha(.4);
+% hold on;
+% 
+% title({titlestr, '\theta against Working Distance and Detector Radius'});
+% xlabel('DETECTOR RADIUS');
+% ylabel('WORKING DISTANCE');
+% zlabel('\theta');
+% 
+% subplot(3,1,3);
+% scatter3(dr,wd,theta-btheta,'x');
+% hold on;
+% thetabq = griddata(dr,wd,theta-btheta,drq,wdq);
+% mesh(drq,wdq,thetabq);
+% hold on;
+% 
+% title({titlestr, '\theta Improvement against Working Distance and Detector Radius'});
+% xlabel('DETECTOR RADIUS');
+% ylabel('WORKING DISTANCE');
+% zlabel('\Delta\theta');
 
 %%
 

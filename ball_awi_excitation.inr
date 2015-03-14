@@ -6,7 +6,7 @@ $END
 $SCR 1
 \
 $SCR 1
-BASELINE WITH +/-20UM DIA ERROR, BARE channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
+LENS, BARE channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
 $SCR 1 
 EX_POW (W), SPOT_DIA, N_LENS, LENS_DIA (um), EFL (um), PDMS_LENS_DET (um), WD_PDMS, ANG, X_SHIFT, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
 $IO OUTPUT CLOSE
@@ -294,9 +294,9 @@ MAIN {
   INTERFACE COATING SPOT WATER WATER
 
 !! Lens    
-!!  ELLIPSOID 3@((LENS_RAD)-10) 0 0 (PDMS_CHAN_LENS)+(LENS_RAD) 'BALL_LENS'
-!!    INTERFACE COATING COAT_BALL PDMS BALL
-!!    REDEFINE COLOR 1
+  ELLIPSOID 3@((LENS_RAD)) 0 0 (PDMS_CHAN_LENS)+(LENS_RAD) 'BALL_LENS'
+    INTERFACE COATING COAT_BALL PDMS BALL
+    REDEFINE COLOR 1
 
   $EXCITATION ?
 
