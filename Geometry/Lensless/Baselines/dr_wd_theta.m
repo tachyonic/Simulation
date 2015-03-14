@@ -13,39 +13,37 @@ theta_calc = atand(dr./(wd+ag));    % for calculation of numerical aperture
 theta_rays = acosd(1-2*(rays./rays_total));
 [drq,wdq] = meshgrid(20:1:200,0:1:301);
 
-subplot(3,1,1);
-scatter3(dr, wd, theta_calc, '.');
-hold on;
-theta_calcq = griddata(dr,wd,theta_calc,drq,wdq);
-mesh(drq,wdq,theta_calcq);
-hold on;
-title('Collection Angle against Working Distance and Detector Radius');
-xlabel('detector radius');
-ylabel('working distance');
-zlabel('\theta_{calculated}');
+dataset=[dr wd theta_rays];
 
-subplot(3,1,2);
-scatter3(dr, wd, theta_rays, '.');
-hold on;
-theta_raysq = griddata(dr,wd,theta_rays,drq,wdq);
-mesh(drq,wdq,theta_raysq);
-hold on;
-title('Collection Angle against Working Distance and Detector Radius');
-xlabel('detector radius');
-ylabel('working distance');
-zlabel('\theta_{simulated}');
-
-
-subplot(3,1,3);
+% subplot(3,1,1);
+% scatter3(dr, wd, theta_calc, '.');
+% hold on;
+% theta_calcq = griddata(dr,wd,theta_calc,drq,wdq);
 % mesh(drq,wdq,theta_calcq);
 % hold on;
+% title('Collection Angle against Working Distance and Detector Radius');
+% xlabel('detector radius');
+% ylabel('working distance');
+% zlabel('\theta_{calculated}');
+% 
+% subplot(3,1,2);
+% scatter3(dr, wd, theta_rays, '.');
+% hold on;
+% theta_raysq = griddata(dr,wd,theta_rays,drq,wdq);
 % mesh(drq,wdq,theta_raysq);
 % hold on;
-theta_diffq=theta_calcq-theta_raysq;
-mesh(drq,wdq,theta_diffq);
-hold on;
-title('Collection Angle against Working Distance and Detector Radius');
-xlabel('detector radius');
-ylabel('working distance');
-zlabel('\theta_{diff}');
-    
+% title('Collection Angle against Working Distance and Detector Radius');
+% xlabel('detector radius');
+% ylabel('working distance');
+% zlabel('\theta_{simulated}');
+% 
+% 
+% subplot(3,1,3);
+% theta_diffq=theta_calcq-theta_raysq;
+% mesh(drq,wdq,theta_diffq);
+% hold on;
+% title('Collection Angle against Working Distance and Detector Radius');
+% xlabel('detector radius');
+% ylabel('working distance');
+% zlabel('\theta_{diff}');
+%     
