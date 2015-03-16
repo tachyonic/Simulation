@@ -22,8 +22,8 @@ Environment variables:
 end
 
 System parameters:
-  start      : Wed Mar 11 08:26:38 2015    
-  stop       : Wed Mar 11 08:26:38 2015    
+  start      : Sat Mar 14 21:00:41 2015    
+  stop       : Sat Mar 14 21:00:41 2015    
   host       : LILGELAB-PC    
   ncpu       : 4           
 end
@@ -35,11 +35,11 @@ Region counts:
 end
 
 Program execution time (in seconds):
-  cpu              :     2.42 sec    
+  cpu              :     2.22 sec    
   elapsed          :     0.00 sec    
     serial         :     0.00 sec    
     parallel       :     0.00 sec    
-  cpu percent      : 12866496.88 %    
+  cpu percent      : 12018490.24 %    
 end
 
 Summary over all regions (has 1 threads):
