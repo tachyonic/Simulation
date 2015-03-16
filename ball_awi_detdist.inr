@@ -1,26 +1,36 @@
 !! file definitions  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-$GUI Plot Link
-$ECHO NONE
-$IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDIST.CSV +FILE(10)
-$END
-$SCR 1
-\
-$SCR 1
-LENS, ANGLE CORRECTED, DETECTOR DISTRIBUTION, CONSTANT LASER POSITION, BARE channel, bare ball, CY5 fluorophore, with media/coating definitions, new excitation spot/emission calculations
-$SCR 1 
-EX_POW (W), SPOT_DIA, N_LENS, LENS_DIA (um), EFL (um), PDMS_LENS_DET (um), WD_PDMS, ANG, X_SHIFT, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
-$IO OUTPUT CLOSE
-$ECHO
+
+SIM_START {
+ $ITER BL 1 0 -2
+  {
+  $ECHO NONE
+  $GUI Plot Link
+  $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDISTTOL.CSV +FILE(10)
+  $END
+  $SCR 1
+  \
+  $SCR 1
+  BASELINE = \BL.\, complete set with tolerances for, detector distribution, bare channel, constant laser position
+  $SCR 1 
+  EX_POW (W), SPOT_DIA, N_LENS, LENS_DIA (um), TOL (um), EFL (um), PDMS_LENS_DET (um), WD_PDMS, ANG, X_SHIFT, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
+  $IO OUTPUT CLOSE
+  $ECHO
+  
+  $LOOP_5 ?
+  
+  }
+}
+
 
 !! nested macros  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 LOOP_5 {
  $ITER N_LENS 1.76 2.21 -2
   {
-    &REG N_LENS
+
     
     $ECHO NONE
-    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDIST.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDISTTOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1
 , , \N_LENS.\ 
@@ -31,33 +41,40 @@ LOOP_5 {
   }
 }
 
+
 LOOP_4 {
  $ITER LENS_DIA 150 250 -2
   {
-    &REG LENS_DIA
+
+  
+    $LOOP_3 ?  
+  }
+}
+
+LOOP_3 {
+ $ITER TOL -20 20 -3
+  {
     
     $ECHO NONE
-    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDIST.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDISTTOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1
-, , ,\LENS_DIA.\ 
+, , ,\LENS_DIA.\, \TOL.\ 
     $IO OUTPUT CLOSE
     $ECHO
-  
+     
     $LOOP_2 ?  
   }
 }
 
-
 LOOP_2 {
-  $ITER PDMS_LENS_DET 0 200 -21 
+  $ITER PDMS_LENS_DET 20 320 -7
   {
-    &REG PDMS_LENS_DET
     $ECHO NONE
-    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDIST.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDISTTOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1
-, ,, , ,\PDMS_LENS_DET.\
+, ,, , , ,\PDMS_LENS_DET.\
     $IO OUTPUT CLOSE
     $ECHO  
 
@@ -67,9 +84,13 @@ LOOP_2 {
 }
 
 LOOP_1 {                        
-$ITER SQRT_DET_RAD 5 18 -14  
+$ITER SQRT_DET_RAD 6 18 -7  
   {
   DET_RAD=(SQRT_DET_RAD)^2
+  
+  &REG N_LENS
+  &REG LENS_DIA
+  &REG PDMS_LENS_DET
   &REG DET_RAD
   
   $MAIN ?
@@ -78,14 +99,16 @@ $ITER SQRT_DET_RAD 5 18 -14
 }
 
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-MAIN {  
+MAIN { 
+  
+$ECHO NONE 
+   
   CONSIDER ALL
   SYSTEM NEW 
   RESET
-  
-  $ECHO NONE 
 
   !! Fundamental constants
   PLANCK=6.6267e-34
@@ -96,7 +119,7 @@ MAIN {
   $READ FLUOR_CY5                                     
   
   EX_POW=400e-6               !! excitation power
-  EX_RAYS=300                   !! (EX_RAYS)^2 * NPHOTONS=EX_FLUX   
+  EX_RAYS=250                   !! (EX_RAYS)^2 * NPHOTONS=EX_FLUX   
   EM_RAYS=10000                 !! EM_RAYS * NPHOTONS=EM_FLUX 
   
   SPOT_DIA=25
@@ -112,8 +135,8 @@ MAIN {
   !! Simulation Variables 
   !!N_LENS=1.768
   N_EFF=(N_LENS)/1.43
-  N_CORE=1.43
-  N_CLAD=1.42
+  N_CORE=1.46
+  N_CLAD=1.44
   
   !! Chip variables
   CHIP_LENGTH=5000            !! Length and width of microchip
@@ -136,163 +159,203 @@ MAIN {
   RATIO=1                     !! taper ratio
   CORETAPER=(CORE)/RATIO      !! diameter of tapered end
   CLADDINGTAPER=(CLADDING)/RATIO 
-  F2LENGTH=850                !!taper length
-  
+  F2LENGTH=850                !!taper length 
+  FIBER=5000                  !! length of remaining fiber
+    
   F2POSZ=(WD_PDMS)+(CHAN_WIDTH)*0.5               !! Z-position of MMF
   F2POSX=324+(CLADDINGTAPER)/2 !! X-Shift of multimode fiber 
   ANGLE=ATAN[((F2POSX))/((F2POSZ))]
-
-  FIBER=5000                  !! length of remaining fiber
-  
-  !! Define units and wavelength
-  UNITS MICRONS 'Watts" 
-  WAVELENGTHS (EM_WAVE) UM 
-
-  !! Define media
-  MEDIA ; 1.43      ABSORB 0.00000004     'PDMS'
-  MEDIA ; (N_LENS)  ABSORB 0.0000000003   'BALL'
-  MEDIA ; 1.51                            'GLASS'
-  MEDIA ; 1.33                            'WATER'
-  MEDIA ; (N_CLAD)                        'DOPED 
-  MEDIA ; (N_CORE)                        'SILICA'
-
-  !!$READ MEDIA_PDMS 
-  !!$READ MEDIA_SAPPHIRE
-  
-  FRESNEL AVE
-                    
-  !! Including 
-  SPLIT 1500 MONTECARLO       !! monte carlo simulation
-  LEVEL 1000 OFF 
-  FRESNEL AVE                 !! fresnel equation
-  
-  !! Coating properties
-  COATING PROPERTIES 0; 0 1 'TRANSMIT' 
-  COATING PROPERTIES 0; 0 0 'ABSORB' 
-  COATING PROPERTIES 0; 1 0 'REFLECT'
-  COATING PROPERTIES 0; 0.005 0.995 'COAT_BALL'
-  COATING PROPERTIES 0; 0 (1-(QY)) 'SPOT'  
-   
-  !! Bounding Surface 
-  SURFACE 
-  PLANE Z (WD_PDMS) 0 0 ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'BoundingPlane' 
-  !!PLOT SURFACE 
-
-  !! Beginning of geometry modeling 
-  ENT OBJ 
-  
-  !! Channel 
-  PLANE Z (CHAN_WIDTH)/2 RECTANGLE (CHIP_LENGTH)/2.2 (CHAN_WIDTH)/2 'CHANNEL.TOP' 
-  INTERFACE COATING BARE WATER PDMS 
-  
-  PLANE Z -(CHAN_WIDTH)/2 RECTANGLE (CHIP_LENGTH)/2.2 (CHAN_WIDTH)/2 'CHANNEL.B0TTOM' 
-  INTERFACE COATING BARE WATER PDMS 
-  
-  PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.BACK' 
-  INTERFACE COATING BARE WATER PDMS
-  SHIFT Y (CHAN_WIDTH)/2 
-  
-  PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.FRONT' 
-  INTERFACE COATING BARE WATER PDMS
-  SHIFT Y -(CHAN_WIDTH)/2 
-  
-  PLANE X 0 RECTANGLE (CHAN_WIDTH)/2 (CHAN_WIDTH)/2 'CHANNEL.RIGHT' 
-  INTERFACE COATING BARE WATER PDMS 
-  SHIFT X (CHIP_LENGTH)/2.2 
-  
-  PLANE X 0 RECTANGLE (CHAN_WIDTH)/2 (CHAN_WIDTH)/2 'CHANNEL.LEFT' 
-  INTERFACE COATING BARE WATER PDMS 
-  SHIFT X -(CHIP_LENGTH)/2.2 
  
-  !! Glass-layer (substrate)
-  TUBE Z -(PDMS_THICK_BOTTOM)  (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 -(PDMS_THICK_BOTTOM)-(GLASS_THICK) (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 0 0 'GLASS.SIDE' 
-  INTERFACE COATING BARE GLASS AIR 
-          
-  PLANE Z -(PDMS_THICK_BOTTOM)-(GLASS_THICK) ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'GLASS.BOTTOM' 
-  INTERFACE COATING BARE GLASS AIR  
-  
-  !! PDMS-layer
-  TUBE Z (WD_PDMS) (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 -(PDMS_THICK_BOTTOM) (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 0 0 'MANTEL.SIDE' 
-  INTERFACE COATING BARE PDMS AIR
-  
-  PLANE Z -(PDMS_THICK_BOTTOM) ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'MANTEL.BOTTOM' 
-  INTERFACE COATING BARE PDMS GLASS 
-
-  PLANE Z (WD_PDMS) ELLIPSE 324 324 'MANTEL.TOP'  
-  INTERFACE COATING TRANSMIT PDMS AIR
-  
-  !! Detector 
-  PLANE Z (WD_PDMS)+(AIR_GAP) ELLIPSE (DET_RAD) (DET_RAD) 'DETECTOR' 
-  INTERFACE COATING ABSORB DOPED AIR   
-   
- !! Multimode fiber 
-  !! Core 
-  TUBE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2 (CORETAPER)/2 (CORETAPER)/2 (F2POSZ)+(FIBER) (CORE)/2 (CORE)/2 0 0 'SMF.CORE' 
-    ROTATE Y (ANGLE) 0 0
-    INTERFACE COATING BARE SILICA DOPED  
-    BOUNDS +1
-  
-  !! Cladding 
-  TUBE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2 (CLADDINGTAPER)/2 (CLADDINGTAPER)/2 (F2POSZ)+(F2LENGTH) (CLADDING)/2 (CLADDING)/2 0 0 'SMF.CLADDING'  
-    ROTATE Y (ANGLE) 0 0
-    INTERFACE COATING ABSORB AIR DOPED  
-    BOUNDS +1
-  
-  !! Core bottom 
-  PLANE Z (F2POSZ) ELLIPSE ((CORETAPER)/SIN[90-(ANGLE)]) (CORE) 'SMF.CORE.BOTTOM'
-    SHIFT X (F2POSX) 
-    INTERFACE COATING TRANSMIT PDMS SILICA  
-    BOUNDS -.3 
-  
-  !! Cladding bottom 
-  PLANE Z (F2POSZ) ELLIPSE ((CLADDINGTAPER)/SIN[90-(ANGLE)]) (CLADDING) 'SMF.CLADDING.BOTTOM'
-    SHIFT X (F2POSX)                                                      
-    INTERFACE COATING TRANSMIT PDMS DOPED 
-    BOUNDS +.4 -.3 
-    
-  !! Remaining fiber end 
-  PLANE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2+(F2LENGTH)+(FIBER) ELLIPSE (CLADDING)/2 (CLADDING)/2 (CORE)/(CLADDING) 'FIBER.CLADDING.TOP'  
-    ROTATE Y (ANGLE) 0 0                                                        
-    INTERFACE COATING ABSORB DOPED AIR 
-  
-  TUBE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2+(F2LENGTH) (CORE)/2 (CORE)/2 (F2POSZ)+(F2LENGTH)+(FIBER) (CORE)/2 (CORE)/2 0 0 'FIBER.CORE'  
-    ROTATE Y (ANGLE) 0 0
-    INTERFACE COATING BARE SILICA DOPED 
-  
-  TUBE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2+(F2LENGTH) (CLADDING)/2 (CLADDING)/2 (F2POSZ)+(F2LENGTH)+(FIBER) (CLADDING)/2 (CLADDING)/2 0 0 'FIBER.CLADDING'  
-    ROTATE Y (ANGLE) 0 0
-    INTERFACE COATING ABSORB AIR DOPED                                                                                                                                    
-
-!! Excitation Spot
-  PLANE X 0 ELLIPSE 2@(SPOT_DIA)/2  'EXCITE_SPOT'
-  !!SHIFT X -(SPOT_DIA)
-  INTERFACE COATING SPOT WATER WATER
-
-!! Lens    
-  ELLIPSOID 3@((LENS_RAD)) 0 0 (PDMS_CHAN_LENS)+(LENS_RAD) 'BALL_LENS'
-    INTERFACE COATING COAT_BALL PDMS BALL
-    REDEFINE COLOR 1
-
-  $EXCITATION ?
-
-$ECHO
-        
-!!WRITES TO TEXT FILE ON EACH PASS
-  $ECHO NONE
-  $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDIST.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
-  $END
-  $SCR 1 
-\EX_POW.\, \SPOT_DIA\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \ANGLE.\, \F2POSX.\, \DIFF_MMF.\, \DET_RAD.\, \EX_DET_R.\, \EX_DET_F.\, \EX_SPOT_R.\, \EX_SPOT_F.\, \SPOT_DET_R.\, \SPOT_DET_F.\, \THETA.\, \SNR.\
-  $IO OUTPUT CLOSE
+  $IF   SIN[ANGLE]*((N_CORE)/1.33) LT  1 THEN
+    DIFF_ANGLE=2*ASIN(SIN[ANGLE]*((N_CORE)/1.33)) !! to make up for difference between smf and water angles
+$GO model  
+  $ENDIF       
   $ECHO
+      
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!WRITES that  Angle is too steep
+    $ECHO NONE
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDISTTOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $END
+    $SCR 1 
+  \EX_POW.\, \SPOT_DIA\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \ANGLE.\, \F2POSX.\, \DIFF_MMF.\, \DET_RAD.\, SKIPPED
+    $IO OUTPUT CLOSE
+    $ECHO      
+$GO skip      
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     
+model
+  
+    $MODEL_DEF ?     
+    $EXCITATION ?
+          
+  !!WRITES TO TEXT FILE ON EACH PASS
+    $ECHO NONE
+    $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDISTTOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
+    $END
+    $SCR 1 
+  \EX_POW.\, \SPOT_DIA\, \N_LENS.\ , \LENS_DIA.\, \TOL.\, \EFL.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \ANGLE.\, \F2POSX.\, \DIFF_MMF.\, \DET_RAD.\, \EX_DET_R.\, \EX_DET_F.\, \EX_SPOT_R.\, \EX_SPOT_F.\, \SPOT_DET_R.\, \SPOT_DET_F.\, \THETA.\, \SNR.\
+    $IO OUTPUT CLOSE
+    $ECHO
 
+skip     
 }
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!! MODEL
 
+MODEL_DEF {
+
+ $ECHO NONE   
+    &REG ANGLE                 
+    &REG DIFF_ANGLE
+  
+    !! Define units and wavelength
+    UNITS MICRONS 'Watts" 
+    WAVELENGTHS (EM_WAVE) UM 
+  
+    !! Define media
+    MEDIA ; 1.43      ABSORB 0.00000004     'PDMS'
+    MEDIA ; (N_LENS)  ABSORB 0.0000000003   'BALL'
+    MEDIA ; 1.51                            'GLASS'
+    MEDIA ; 1.33                            'WATER'
+    MEDIA ; (N_CLAD)                        'DOPED 
+    MEDIA ; (N_CORE)                        'SILICA'
+  
+    !!$READ MEDIA_PDMS 
+    !!$READ MEDIA_SAPPHIRE
+    
+    FRESNEL AVE
+                      
+    !! Including 
+    SPLIT 1500 MONTECARLO       !! monte carlo simulation
+    LEVEL 1000 OFF 
+    FRESNEL AVE                 !! fresnel equation
+    
+    !! Coating properties
+    COATING PROPERTIES 0; 0 1 'TRANSMIT' 
+    COATING PROPERTIES 0; 0 0 'ABSORB' 
+    COATING PROPERTIES 0; 1 0 'REFLECT'
+    COATING PROPERTIES 0; 0.005 0.995 'COAT_BALL'
+    COATING PROPERTIES 0; 0 (1-(QY)) 'SPOT'  
+     
+    !! Bounding Surface 
+    SURFACE 
+    PLANE Z (WD_PDMS) 0 0 ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'BoundingPlane' 
+    !!PLOT SURFACE 
+  
+    !! Beginning of geometry modeling 
+    ENT OBJ 
+    
+    !! Channel 
+    PLANE Z (CHAN_WIDTH)/2 RECTANGLE (CHIP_LENGTH)/2.2 (CHAN_WIDTH)/2 'CHANNEL.TOP' 
+    INTERFACE COATING BARE WATER PDMS 
+    
+    PLANE Z -(CHAN_WIDTH)/2 RECTANGLE (CHIP_LENGTH)/2.2 (CHAN_WIDTH)/2 'CHANNEL.B0TTOM' 
+    INTERFACE COATING BARE WATER PDMS 
+    
+    PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.BACK' 
+    INTERFACE COATING BARE WATER PDMS
+    SHIFT Y (CHAN_WIDTH)/2 
+    
+    PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.FRONT' 
+    INTERFACE COATING BARE WATER PDMS
+    SHIFT Y -(CHAN_WIDTH)/2 
+    
+    PLANE X 0 RECTANGLE (CHAN_WIDTH)/2 (CHAN_WIDTH)/2 'CHANNEL.RIGHT' 
+    INTERFACE COATING BARE WATER PDMS 
+    SHIFT X (CHIP_LENGTH)/2.2 
+    
+    PLANE X 0 RECTANGLE (CHAN_WIDTH)/2 (CHAN_WIDTH)/2 'CHANNEL.LEFT' 
+    INTERFACE COATING BARE WATER PDMS 
+    SHIFT X -(CHIP_LENGTH)/2.2 
+   
+    !! Glass-layer (substrate)
+    TUBE Z -(PDMS_THICK_BOTTOM)  (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 -(PDMS_THICK_BOTTOM)-(GLASS_THICK) (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 0 0 'GLASS.SIDE' 
+    INTERFACE COATING BARE GLASS AIR 
+            
+    PLANE Z -(PDMS_THICK_BOTTOM)-(GLASS_THICK) ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'GLASS.BOTTOM' 
+    INTERFACE COATING BARE GLASS AIR  
+    
+    !! PDMS-layer
+    TUBE Z (WD_PDMS) (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 -(PDMS_THICK_BOTTOM) (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 0 0 'MANTEL.SIDE' 
+    INTERFACE COATING BARE PDMS AIR
+    
+    PLANE Z -(PDMS_THICK_BOTTOM) ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'MANTEL.BOTTOM' 
+    INTERFACE COATING BARE PDMS GLASS 
+    
+    !! Detector 
+    PLANE Z (WD_PDMS)+(AIR_GAP) ELLIPSE (DET_RAD) (DET_RAD) 'DETECTOR' 
+    INTERFACE COATING ABSORB DOPED AIR   
+     
+   !! Multimode fiber 
+    !! Core 
+    TUBE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2 (CORETAPER)/2 (CORETAPER)/2 (F2POSZ)+(FIBER) (CORE)/2 (CORE)/2 0 0 'SMF.CORE' 
+      ROTATE Y (ANGLE) 0 0
+      ROTATE Y -(DIFF_ANGLE) (F2POSZ) (F2POSX)
+      INTERFACE COATING BARE SILICA DOPED  
+      BOUNDS +1
+    
+    !! Cladding 
+    TUBE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2 (CLADDINGTAPER)/2 (CLADDINGTAPER)/2 (F2POSZ)+(F2LENGTH) (CLADDING)/2 (CLADDING)/2 0 0 'SMF.CLADDING'  
+      ROTATE Y (ANGLE) 0 0 
+      ROTATE Y -(DIFF_ANGLE) (F2POSZ) (F2POSX)
+      INTERFACE COATING ABSORB AIR DOPED  
+      BOUNDS +1
+    
+    !! Core bottom 
+    PLANE Z (F2POSZ) ELLIPSE ((CORETAPER)/SIN[90-(ANGLE)]) (CORE) 'SMF.CORE.BOTTOM'
+      SHIFT X (F2POSX) 
+      INTERFACE COATING TRANSMIT PDMS SILICA  
+      BOUNDS -.3 
+    
+    !! Cladding bottom 
+    PLANE Z (F2POSZ) ELLIPSE ((CLADDINGTAPER)/SIN[90-(ANGLE)]) (CLADDING) 'SMF.CLADDING.BOTTOM'
+      SHIFT X (F2POSX)                                                      
+      INTERFACE COATING TRANSMIT PDMS DOPED 
+      BOUNDS +.4 -.3 
+  
+    PLANE Z (WD_PDMS) ELLIPSE (CHIP_LENGTH)/2 (CHIP_LENGTH)/2 'MANTEL.TOP'
+      INTERFACE COATING TRANSMIT PDMS AIR   
+      BOUNDS +.4  
+      
+    !! Remaining fiber end 
+    PLANE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2+(F2LENGTH)+(FIBER) ELLIPSE (CLADDING)/2 (CLADDING)/2 (CORE)/(CLADDING) 'FIBER.CLADDING.TOP'  
+      ROTATE Y (ANGLE) 0 0
+      ROTATE Y -(DIFF_ANGLE) (F2POSZ) (F2POSX)                                                        
+      INTERFACE COATING ABSORB DOPED AIR 
+    
+    TUBE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2+(F2LENGTH) (CORE)/2 (CORE)/2 (F2POSZ)+(F2LENGTH)+(FIBER) (CORE)/2 (CORE)/2 0 0 'FIBER.CORE'  
+      ROTATE Y (ANGLE) 0 0 
+      ROTATE Y -(DIFF_ANGLE) (F2POSZ) (F2POSX)
+      INTERFACE COATING BARE SILICA DOPED 
+    
+    TUBE Z (CLADDINGTAPER)+(CHAN_WIDTH)/2+(F2LENGTH) (CLADDING)/2 (CLADDING)/2 (F2POSZ)+(F2LENGTH)+(FIBER) (CLADDING)/2 (CLADDING)/2 0 0 'FIBER.CLADDING'  
+      ROTATE Y (ANGLE) 0 0 
+      ROTATE Y -(DIFF_ANGLE) (F2POSZ) (F2POSX)
+      INTERFACE COATING ABSORB AIR DOPED                                                                                                                                    
+  
+  !! Excitation Spot
+    PLANE X 0 ELLIPSE 2@(SPOT_DIA)/2  'EXCITE_SPOT'
+    !!SHIFT X -(SPOT_DIA)
+    INTERFACE COATING SPOT WATER WATER
+
+  
+  $IF (BL) EQ 0  
+    !! Lens
+    LENS_RAD_TOL=(LENS_RAD)+(TOL)    
+      ELLIPSOID 3@((LENS_RAD_TOL)) 0 0 (PDMS_CHAN_LENS)+(LENS_RAD) 'BALL_LENS'
+        INTERFACE COATING COAT_BALL PDMS BALL
+        REDEFINE COLOR 1
+  $ENDIF
+    
+  $ECHO
+}                                       
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!! EXCITATION  
 
 EXCITATION  {
 
+  $ECHO NONE
+  
     RAYS 0
     IMMERSE SILICA
     PARABASALS 4
@@ -302,6 +365,7 @@ EXCITATION  {
     GAUSSIAN Z -((FIBER)/2)-(F2LENGTH)-(F2POSZ) 2@0 2@(EX_RAYS) 2@0 2@(SPOT_DIA)/2
       SOURCE DIRECTION 0 0 1
       ROTATE Y (ANGLE)+180 0 0
+      ROTATE Y -(DIFF_ANGLE) (F2POSZ) (F2POSX)
 
     WINDOW Z X
     PIXELS 51
@@ -361,11 +425,14 @@ EXCITATION  {
   $ELSE
     SNR=-1
   $ENDIF
+  
+  $ECHO
 }
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-$LOOP_5 ?
+$SIM_START ?
                             
 RETURN
 
