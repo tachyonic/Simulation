@@ -10,11 +10,19 @@ SIM_START {
   $SCR 1
   \
   $SCR 1
-  BASELINE = \BL.\, complete set with tolerances for, detector distribution, bare channel, constant laser position
+  REFLECTIVE CHANNEL, BASELINE = \BL.\, complete set with tolerances for, detector distribution, bare channel, constant laser position
   $SCR 1 
   EX_POW (W), SPOT_DIA, N_LENS, LENS_DIA (um), TOL (um), EFL (um), PDMS_LENS_DET (um), WD_PDMS, ANG, X_SHIFT, DIFF_X, DET_RAD (um), EX_DET_R, EX_DET_F, EX_SPOT_R, EX_SPOT_F, SPOT_DET_R, SPOT_DET_F, THETA, SNR
   $IO OUTPUT CLOSE
   $ECHO
+  
+  $IF (BL) EQ 1 THEN
+    TOL_=0
+    TOL_NUM=-1
+  $ELSE
+    TOL_=20
+    TOL_NUM=-3
+  $ENDIF
   
   $LOOP_5 ?
   
@@ -27,8 +35,7 @@ SIM_START {
 LOOP_5 {
  $ITER N_LENS 1.76 2.21 -2
   {
-
-    
+ 
     $ECHO NONE
     $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDISTTOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
@@ -45,16 +52,15 @@ LOOP_5 {
 LOOP_4 {
  $ITER LENS_DIA 150 250 -2
   {
-
-  
-    $LOOP_3 ?  
+    $LOOP_3
+    
   }
 }
 
-LOOP_3 {
- $ITER TOL -20 20 -3
+LOOP_3 { 
+
+ $ITER TOL -(TOL_) (TOL_) (TOL_NUM)
   {
-    
     $ECHO NONE
     $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDISTTOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
@@ -84,7 +90,7 @@ LOOP_2 {
 }
 
 LOOP_1 {                        
-$ITER SQRT_DET_RAD 6 18 -7  
+$ITER SQRT_DET_RAD 5 18 -8  
   {
   DET_RAD=(SQRT_DET_RAD)^2
   
@@ -166,24 +172,20 @@ $ECHO NONE
   F2POSX=324+(CLADDINGTAPER)/2 !! X-Shift of multimode fiber 
   ANGLE=ATAN[((F2POSX))/((F2POSZ))]
  
-  $IF   SIN[ANGLE]*((N_CORE)/1.33) LT  1 THEN
-    DIFF_ANGLE=2*ASIN(SIN[ANGLE]*((N_CORE)/1.33)) !! to make up for difference between smf and water angles
-$GO model  
-  $ENDIF       
-  $ECHO
-      
+  $IF   SIN[ANGLE]*((N_CORE)/1.33) GT  1 THEN  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!WRITES that  Angle is too steep
-    $ECHO NONE
     $IO OUTPUT GEOMETRY\BALL\COMMERCIAL\AWIDISTTOL.CSV +FILE(10)   !! ALL SUCCESSIVE ITERATIONS
     $END
     $SCR 1 
   \EX_POW.\, \SPOT_DIA\, \N_LENS.\ , \LENS_DIA.\, \EFL.\ , \PDMS_LENS_DET.\ , \WD_PDMS.\, \ANGLE.\, \F2POSX.\, \DIFF_MMF.\, \DET_RAD.\, SKIPPED
     $IO OUTPUT CLOSE
-    $ECHO      
+    $ECHO  
+        
 $GO skip      
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     
-model
+!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+  $ENDIF
+
+DIFF_ANGLE=2*ASIN(SIN[ANGLE]*((N_CORE)/1.33)) !! to make up for difference between smf and water angles       
   
     $MODEL_DEF ?     
     $EXCITATION ?
@@ -250,14 +252,14 @@ MODEL_DEF {
     INTERFACE COATING BARE WATER PDMS 
     
     PLANE Z -(CHAN_WIDTH)/2 RECTANGLE (CHIP_LENGTH)/2.2 (CHAN_WIDTH)/2 'CHANNEL.B0TTOM' 
-    INTERFACE COATING BARE WATER PDMS 
+    INTERFACE COATING REFLECT WATER PDMS 
     
     PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.BACK' 
-    INTERFACE COATING BARE WATER PDMS
+    INTERFACE COATING REFLECT WATER PDMS
     SHIFT Y (CHAN_WIDTH)/2 
     
     PLANE Y 0 RECTANGLE (CHAN_WIDTH)/2 (CHIP_LENGTH)/2.2 'CHANNEL.FRONT' 
-    INTERFACE COATING BARE WATER PDMS
+    INTERFACE COATING REFLECT WATER PDMS
     SHIFT Y -(CHAN_WIDTH)/2 
     
     PLANE X 0 RECTANGLE (CHAN_WIDTH)/2 (CHAN_WIDTH)/2 'CHANNEL.RIGHT' 
@@ -339,7 +341,7 @@ MODEL_DEF {
     INTERFACE COATING SPOT WATER WATER
 
   
-  $IF (BL) EQ 0  
+  $IF (BL) EQ 0 THEN  
     !! Lens
     LENS_RAD_TOL=(LENS_RAD)+(TOL)    
       ELLIPSOID 3@((LENS_RAD_TOL)) 0 0 (PDMS_CHAN_LENS)+(LENS_RAD) 'BALL_LENS'
